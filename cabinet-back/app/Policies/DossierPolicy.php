@@ -4,63 +4,75 @@ namespace App\Policies;
 
 use App\Models\Dossier;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class DossierPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can('dossiers.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Dossier $dossier): bool
     {
-        return false;
+        if ($user->hasRole('avocat')) {
+            return $this->isAssigned($user, $dossier);
+        }
+
+        return $user->can('dossiers.view');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('dossiers.manage');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Dossier $dossier): bool
     {
-        return false;
+        if ($user->hasRole('avocat')) {
+            return $this->isAssigned($user, $dossier);
+        }
+
+        return $user->can('dossiers.manage');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Dossier $dossier): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function manageStatut(User $user, Dossier $dossier): bool
+    {
+        return $this->update($user, $dossier);
+    }
+
+    public function assignAvocats(User $user, Dossier $dossier): bool
+    {
+        return $user->hasRole('admin') || ($user->can('dossiers.manage') && ! $user->hasRole('avocat'));
+    }
+
+    public function dashboard(User $user, Dossier $dossier): bool
+    {
+        return $user->can('dashboard.view');
+    }
+
     public function restore(User $user, Dossier $dossier): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Dossier $dossier): bool
     {
-        return false;
+        return $user->hasRole('admin');
+    }
+
+    private function isAssigned(User $user, Dossier $dossier): bool
+    {
+        $avocat = $user->avocat;
+
+        if (! $avocat) {
+            return false;
+        }
+
+        return $dossier->avocats()->where('avocats.id', $avocat->id)->exists();
     }
 }

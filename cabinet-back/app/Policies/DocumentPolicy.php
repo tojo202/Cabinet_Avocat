@@ -4,63 +4,71 @@ namespace App\Policies;
 
 use App\Models\Document;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class DocumentPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can('documents.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Document $document): bool
     {
-        return false;
+        if ($user->hasRole('avocat')) {
+            if (! $document->dossier_id) {
+                return false;
+            }
+
+            return $this->dossierAssigned($user, $document);
+        }
+
+        return $user->can('documents.view');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('documents.manage');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Document $document): bool
     {
-        return false;
+        return $user->can('documents.manage');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Document $document): bool
     {
-        return false;
+        if ($user->hasRole('avocat')) {
+            return $this->dossierAssigned($user, $document);
+        }
+
+        return $user->can('documents.manage') && ! $user->hasRole('comptable');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function download(User $user, Document $document): bool
+    {
+        return $this->view($user, $document);
+    }
+
     public function restore(User $user, Document $document): bool
     {
-        return false;
+        return $user->hasRole(['admin', 'secretaire']);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Document $document): bool
     {
-        return false;
+        return $user->hasRole('admin');
+    }
+
+    private function dossierAssigned(User $user, Document $document): bool
+    {
+        $avocat = $user->avocat;
+
+        if (! $avocat || ! $document->dossier_id) {
+            return false;
+        }
+
+        return $document->dossier()
+            ->whereHas('avocats', fn ($q) => $q->where('avocats.id', $avocat->id))
+            ->exists();
     }
 }

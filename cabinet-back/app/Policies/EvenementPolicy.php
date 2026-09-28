@@ -4,63 +4,57 @@ namespace App\Policies;
 
 use App\Models\Evenement;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class EvenementPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can('evenements.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Evenement $evenement): bool
     {
-        return false;
+        if ($user->hasRole('avocat')) {
+            if (! $evenement->dossier_id) {
+                return true;
+            }
+
+            $avocat = $user->avocat;
+
+            if (! $avocat) {
+                return false;
+            }
+
+            return $evenement->dossier()
+                ->whereHas('avocats', fn ($q) => $q->where('avocats.id', $avocat->id))
+                ->exists();
+        }
+
+        return $user->can('evenements.view');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('evenements.manage');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Evenement $evenement): bool
     {
-        return false;
+        return $user->can('evenements.manage');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Evenement $evenement): bool
     {
-        return false;
+        return $user->hasRole(['admin', 'secretaire']);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Evenement $evenement): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Evenement $evenement): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 }

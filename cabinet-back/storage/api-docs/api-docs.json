@@ -1,0 +1,1794 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "CabinetPro API",
+        "description": "API REST de gestion de cabinet d'avocat — CabinetPro.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api/v1",
+            "description": "API v1"
+        }
+    ],
+    "paths": {
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Authentifier un utilisateur",
+                "operationId": "a7997e7c1e3bfed64d4e56de82415931",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "role": {
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Identifiants invalides"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Révoquer le token courant",
+                "operationId": "f6b8957b4c0b25636613a9f0512a8ba9",
+                "responses": {
+                    "200": {
+                        "description": "Déconnexion réussie"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Utilisateur courant",
+                "operationId": "37d33f0281f67d31d05b4c45eea0143b",
+                "responses": {
+                    "200": {
+                        "description": "Profil utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "role": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/avocats": {
+            "get": {
+                "tags": [
+                    "Avocats"
+                ],
+                "summary": "Liste des avocats",
+                "operationId": "5414f45b91fece1941023a67c10c6aba",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination des avocats"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Avocats"
+                ],
+                "summary": "Créer un avocat (et son compte utilisateur)",
+                "operationId": "f3a11d876b9dcb549310f1614005dc36",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Avocat"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Avocat créé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/avocats/{avocat}": {
+            "get": {
+                "tags": [
+                    "Avocats"
+                ],
+                "summary": "Détail d'un avocat",
+                "operationId": "1d6f9d9e138ae82e14b87eed9706a605",
+                "parameters": [
+                    {
+                        "name": "avocat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Avocat"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Avocats"
+                ],
+                "summary": "Modifier un avocat",
+                "operationId": "c1bb164ce85bc4a49de03a8a5e3b1b57",
+                "parameters": [
+                    {
+                        "name": "avocat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Avocat"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Avocat modifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Avocats"
+                ],
+                "summary": "Désactiver un avocat",
+                "operationId": "62fc8c27a1d54de2cb997bcb2b2ea900",
+                "parameters": [
+                    {
+                        "name": "avocat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Avocat désactivé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/clients": {
+            "get": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Liste des clients",
+                "operationId": "3dc702c49ee2caa5dd56328483587398",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "particulier",
+                                "societe"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination des clients"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Créer un client",
+                "operationId": "fa5db0d5e257989e36bfe9cc2de663c2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Client"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Client créé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/clients/stats": {
+            "get": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Statistiques clients",
+                "operationId": "2dfa189e82335eb1b2dcf90af54948d9",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/clients/{client}": {
+            "get": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Détail d'un client",
+                "operationId": "c1aaafb8e0a93e996c1d5fcb7ce893ac",
+                "parameters": [
+                    {
+                        "name": "client",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Modifier un client",
+                "operationId": "38c1cde835bc6dc56cf23070c5ae54c9",
+                "parameters": [
+                    {
+                        "name": "client",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Client"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Client modifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Supprimer un client",
+                "operationId": "987cd6d1e54655f7e49e981591263c2c",
+                "parameters": [
+                    {
+                        "name": "client",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Client supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/clients/export": {
+            "get": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Export CSV des clients",
+                "operationId": "fd262165664203513e5a69d868b72ae3",
+                "responses": {
+                    "200": {
+                        "description": "Fichier CSV"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dashboard/stats": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "KPI du tableau de bord",
+                "operationId": "00464eac0b2daa2b7dfd173ce52781f0",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dashboard/activite": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Activité sur 7 jours (dossiers ouverts + rendez-vous)",
+                "operationId": "d9840087c3a804f899b1ecd7403182a3",
+                "responses": {
+                    "200": {
+                        "description": "Série temporelle pour Recharts"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dashboard/dossiers-recents": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "5 derniers dossiers",
+                "operationId": "1fcadb27f1e4346899e40c32a72cf05f",
+                "responses": {
+                    "200": {
+                        "description": "Dossiers récents"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/documents": {
+            "get": {
+                "tags": [
+                    "Documents"
+                ],
+                "summary": "Liste des documents",
+                "operationId": "a3f72d0f1040078409cdb8a1ee21d40b",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "categorie_document_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination des documents"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Documents"
+                ],
+                "summary": "Uploader un document (stockage privé)",
+                "operationId": "5c98d63549356cb0e0900901fd142d56",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "dossier_id": {
+                                        "type": "integer"
+                                    },
+                                    "categorie_document_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Document uploadé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/documents/stats": {
+            "get": {
+                "tags": [
+                    "Documents"
+                ],
+                "summary": "Statistiques documents",
+                "operationId": "5e675dced9f52112eba9fff36dd58014",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/documents/{document}": {
+            "get": {
+                "tags": [
+                    "Documents"
+                ],
+                "summary": "Détail d'un document",
+                "operationId": "c5241de6309b57267ad914888f95ca9a",
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Documents"
+                ],
+                "summary": "Supprimer un document",
+                "operationId": "867bc0947afcbba0319db67b27716bea",
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Document supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/documents/{document}/download": {
+            "get": {
+                "tags": [
+                    "Documents"
+                ],
+                "summary": "Télécharger un document (vérifie la policy)",
+                "operationId": "2269b642a56d2b65df5ba7eea5bf721b",
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dossiers": {
+            "get": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Liste des dossiers",
+                "operationId": "3639c07930436dd8ce5efde3abb52d4b",
+                "parameters": [
+                    {
+                        "name": "statut",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type_droit",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "priorite",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination des dossiers"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Créer un dossier",
+                "operationId": "464dbe49079bf88a59ebcb47a69596ef",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Dossier"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Dossier créé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dossiers/stats": {
+            "get": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Statistiques des dossiers",
+                "operationId": "dfc677316fa473b3e3c8825452253e89",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dossiers/{dossier}": {
+            "get": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Détail d'un dossier",
+                "operationId": "23ebf728f29d12d57f70a5ebe4df6018",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dossier"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Modifier un dossier",
+                "operationId": "d0c471e016c5c88320fe22611b08029d",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Dossier"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dossier modifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Supprimer un dossier",
+                "operationId": "c769a8a231e5aaff9f1b492acabe042c",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Dossier supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dossiers/{dossier}/statut": {
+            "patch": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Changer le statut d'un dossier",
+                "operationId": "6a05909149bfce0cd754c438661dff36",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "statut"
+                                ],
+                                "properties": {
+                                    "statut": {
+                                        "type": "string",
+                                        "enum": [
+                                            "en_cours",
+                                            "en_revision",
+                                            "en_attente",
+                                            "cloture"
+                                        ]
+                                    },
+                                    "avancement": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dossier mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dossiers/{dossier}/avocats": {
+            "post": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Attacher ou détacher des avocats",
+                "operationId": "c9aac39619e001102abd127bdca3d07e",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "avocat_ids"
+                                ],
+                                "properties": {
+                                    "avocat_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "roles": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Avocats synchronisés"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dossiers/{dossier}/activites": {
+            "get": {
+                "tags": [
+                    "Dossiers"
+                ],
+                "summary": "Historique / audit d'un dossier",
+                "operationId": "d1dc7ce8f144070295a162b30064dcaa",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Journal d'audit"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/evenements": {
+            "get": {
+                "tags": [
+                    "Calendrier"
+                ],
+                "summary": "Liste des évènements",
+                "operationId": "67e6473ed23851b615eb46e892c828e5",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination des évènements"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Calendrier"
+                ],
+                "summary": "Créer un évènement",
+                "operationId": "75bea6238c4386b83a5d9ce897bbebf5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Evenement"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Évènement créé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/evenements/{evenement}": {
+            "get": {
+                "tags": [
+                    "Calendrier"
+                ],
+                "summary": "Détail d'un évènement",
+                "operationId": "a0c8249285e62bac2e3343cac8c65952",
+                "parameters": [
+                    {
+                        "name": "evenement",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Évènement"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Calendrier"
+                ],
+                "summary": "Modifier un évènement",
+                "operationId": "73e214a5884dc0d4abd85112bdaa8a1a",
+                "parameters": [
+                    {
+                        "name": "evenement",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Evenement"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Évènement modifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Calendrier"
+                ],
+                "summary": "Supprimer un évènement",
+                "operationId": "b1c038a2ca32cd3a58d6338c6a2b99b8",
+                "parameters": [
+                    {
+                        "name": "evenement",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Évènement supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/factures": {
+            "get": {
+                "tags": [
+                    "Facturation"
+                ],
+                "summary": "Liste des factures",
+                "operationId": "9f77f3471a110c9fd8c1f9c6d82e9e25",
+                "parameters": [
+                    {
+                        "name": "statut",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination des factures"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Facturation"
+                ],
+                "summary": "Créer une facture avec ses lignes",
+                "operationId": "6fc95a208a56c44157c7a214ee6a2439",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Facture"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Facture créée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/factures/stats": {
+            "get": {
+                "tags": [
+                    "Facturation"
+                ],
+                "summary": "Statistiques de facturation",
+                "operationId": "ee1e7e27648c44dd5022d597a2f0dd13",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/factures/{facture}": {
+            "get": {
+                "tags": [
+                    "Facturation"
+                ],
+                "summary": "Détail d'une facture",
+                "operationId": "c4ad48cad56c060b600a053ec88f441b",
+                "parameters": [
+                    {
+                        "name": "facture",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Facture"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Facturation"
+                ],
+                "summary": "Modifier une facture",
+                "operationId": "c092a3bdba1fe68a6112424f58fe3743",
+                "parameters": [
+                    {
+                        "name": "facture",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Facture"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Facture modifiée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Facturation"
+                ],
+                "summary": "Supprimer une facture",
+                "operationId": "3384c684f5ddac9968b2a8fa5218f6a9",
+                "parameters": [
+                    {
+                        "name": "facture",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Facture supprimée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/factures/{facture}/paiements": {
+            "post": {
+                "tags": [
+                    "Facturation"
+                ],
+                "summary": "Enregistrer un paiement",
+                "operationId": "781a9713e32354f5d05aa9d7b24e92d3",
+                "parameters": [
+                    {
+                        "name": "facture",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Paiement"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Paiement enregistré"
+                    },
+                    "422": {
+                        "description": "Montant supérieur au solde"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/factures/{facture}/pdf": {
+            "get": {
+                "tags": [
+                    "Facturation"
+                ],
+                "summary": "Télécharger le PDF d'une facture",
+                "operationId": "03dfd6a975911077a654e635a97cd525",
+                "parameters": [
+                    {
+                        "name": "facture",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Avocat": {
+                "required": [
+                    "nom",
+                    "prenom"
+                ],
+                "properties": {
+                    "nom": {
+                        "type": "string"
+                    },
+                    "prenom": {
+                        "type": "string"
+                    },
+                    "specialite": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telephone": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "barreau": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "actif": {
+                        "type": "boolean"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password"
+                    }
+                },
+                "type": "object"
+            },
+            "Client": {
+                "required": [
+                    "type_client",
+                    "nom"
+                ],
+                "properties": {
+                    "type_client": {
+                        "type": "string",
+                        "enum": [
+                            "particulier",
+                            "societe"
+                        ]
+                    },
+                    "nom": {
+                        "type": "string"
+                    },
+                    "prenom": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "raison_sociale": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true
+                    },
+                    "telephone": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "adresse": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "nif": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "stat": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "actif": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "Dossier": {
+                "required": [
+                    "client_id",
+                    "titre",
+                    "type_droit",
+                    "date_ouverture"
+                ],
+                "properties": {
+                    "client_id": {
+                        "type": "integer"
+                    },
+                    "titre": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "type_droit": {
+                        "type": "string"
+                    },
+                    "statut": {
+                        "type": "string",
+                        "enum": [
+                            "en_cours",
+                            "en_revision",
+                            "en_attente",
+                            "cloture"
+                        ]
+                    },
+                    "priorite": {
+                        "type": "string",
+                        "enum": [
+                            "normale",
+                            "haute",
+                            "urgente"
+                        ]
+                    },
+                    "avancement": {
+                        "type": "integer",
+                        "maximum": 100,
+                        "minimum": 0
+                    },
+                    "montant": {
+                        "description": "Montant en Ariary (entier)",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "date_ouverture": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "date_cloture": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "avocat_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Evenement": {
+                "required": [
+                    "titre",
+                    "type",
+                    "debut"
+                ],
+                "properties": {
+                    "titre": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "rendez_vous",
+                            "audience",
+                            "echeance"
+                        ]
+                    },
+                    "debut": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "fin": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "dossier_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "client_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "lieu": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Facture": {
+                "required": [
+                    "client_id",
+                    "date_facture",
+                    "date_echeance",
+                    "lignes"
+                ],
+                "properties": {
+                    "client_id": {
+                        "type": "integer"
+                    },
+                    "dossier_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "date_facture": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "date_echeance": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "statut": {
+                        "type": "string",
+                        "enum": [
+                            "brouillon",
+                            "en_attente",
+                            "payee",
+                            "annulee"
+                        ]
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lignes": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "designation": {
+                                    "type": "string"
+                                },
+                                "quantite": {
+                                    "type": "integer"
+                                },
+                                "prix_unitaire": {
+                                    "description": "En Ariary (entier)",
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Paiement": {
+                "required": [
+                    "montant",
+                    "mode",
+                    "date_paiement"
+                ],
+                "properties": {
+                    "montant": {
+                        "description": "En Ariary (entier)",
+                        "type": "integer"
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "especes",
+                            "virement",
+                            "mobile_money",
+                            "cheque"
+                        ]
+                    },
+                    "date_paiement": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "reference": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "Avocats",
+            "description": "Avocats"
+        },
+        {
+            "name": "Clients",
+            "description": "Clients"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard"
+        },
+        {
+            "name": "Documents",
+            "description": "Documents"
+        },
+        {
+            "name": "Dossiers",
+            "description": "Dossiers"
+        },
+        {
+            "name": "Calendrier",
+            "description": "Calendrier"
+        },
+        {
+            "name": "Facturation",
+            "description": "Facturation"
+        }
+    ]
+}

@@ -4,63 +4,73 @@ namespace App\Policies;
 
 use App\Models\Facture;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class FacturePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        if ($user->hasRole('secretaire')) {
+            return false;
+        }
+
+        return $user->can('factures.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Facture $facture): bool
     {
-        return false;
+        if ($user->hasRole('secretaire')) {
+            return false;
+        }
+
+        if ($user->hasRole('avocat')) {
+            if (! $avocat = $user->avocat) {
+                return false;
+            }
+
+            if (! $facture->dossier_id) {
+                return false;
+            }
+
+            return $facture->dossier()
+                ->whereHas('avocats', fn ($q) => $q->where('avocats.id', $avocat->id))
+                ->exists();
+        }
+
+        return $user->can('factures.view');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can('factures.manage');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Facture $facture): bool
     {
-        return false;
+        return $user->can('factures.manage');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Facture $facture): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function addPaiement(User $user, Facture $facture): bool
+    {
+        return $user->can('paiements.manage');
+    }
+
+    public function pdf(User $user, Facture $facture): bool
+    {
+        return $this->view($user, $facture);
+    }
+
     public function restore(User $user, Facture $facture): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Facture $facture): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 }
