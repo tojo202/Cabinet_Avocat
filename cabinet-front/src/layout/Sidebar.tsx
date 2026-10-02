@@ -5,8 +5,10 @@ import {
   FileText,
   FolderOpen,
   Gavel,
+  PieChart,
   Scale,
   Settings,
+  SlidersHorizontal,
   Users,
   Wallet,
 } from 'lucide-react'
@@ -32,6 +34,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Paiements', to: '/paiements', icon: Wallet, permission: 'factures.view' },
   { label: 'Documents', to: '/documents', icon: BookOpen, permission: 'documents.view' },
   { label: 'Avocats', to: '/avocats', icon: Gavel, permission: 'avocats.view' },
+  { label: 'Rapports', to: '/rapports', icon: PieChart, permission: 'rapports.view' },
+  { label: 'Paramètres', to: '/parametres', icon: SlidersHorizontal, permission: 'parametres.manage' },
   { label: 'Administration', to: '/administration', icon: Settings, adminOnly: true },
 ]
 
@@ -60,7 +64,7 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   'flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground',
+                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
                 )
               }
             >
@@ -76,14 +80,14 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="fixed inset-y-0 start-0 z-30 hidden w-60 flex-col border-e border-border bg-sidebar lg:flex">
-      <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+    <aside className="fixed inset-y-0 start-0 z-30 hidden w-60 flex-col border-e border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex">
+      <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
           <Scale className="size-4" />
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-semibold">CabinetPro</span>
-          <span className="text-xs text-muted-foreground">Gestion juridique</span>
+          <span className="text-xs text-sidebar-foreground/60">Gestion juridique</span>
         </div>
       </div>
 
@@ -91,7 +95,7 @@ export function Sidebar() {
         <NavLinks />
       </nav>
 
-      <div className="border-t border-border p-4 text-xs text-muted-foreground">
+      <div className="border-t border-sidebar-border p-4 text-xs text-sidebar-foreground/60">
         CabinetPro © {new Date().getFullYear()}
       </div>
     </aside>

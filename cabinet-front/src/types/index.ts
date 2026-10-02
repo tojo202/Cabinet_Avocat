@@ -122,11 +122,11 @@ export type ModePaiement = 'especes' | 'virement' | 'mobile_money' | 'cheque'
 
 export interface FactureLigne {
   id: number
-  facture_id: number
+  facture_id?: number
   designation: string
   quantite: number
   prix_unitaire: number
-  sous_total: number
+  montant: number
 }
 
 export interface Paiement {
@@ -214,8 +214,8 @@ export interface ActivityEntry {
   id: number
   log_name: string
   description: string
-  event: string
-  properties: Record<string, unknown>
+  event: string | null
+  properties: Record<string, unknown> | unknown[]
   causer: { id: number | null; name: string | null }
   created_at: string
 }
@@ -259,4 +259,94 @@ export interface PaiementsStats {
 
 export interface PaiementAvecFacture extends Paiement {
   facture?: Facture
+}
+
+export interface Utilisateur {
+  id: number
+  name: string
+  email: string
+  role: Role | null
+  created_at: string
+  updated_at: string
+}
+
+export interface UtilisateurPayload {
+  name: string
+  email: string
+  role: Role
+  password?: string
+}
+
+export interface ParametresCabinet {
+  nom_cabinet: string
+  raison_sociale: string
+  adresse: string
+  telephone: string
+  email: string
+  devise: string
+  fuseau: string
+  en_tete_facture: string
+}
+
+export interface RapportPeriode {
+  debut: string
+  fin: string
+}
+
+export interface RapportStatut {
+  statut: StatutDossier
+  total: number
+}
+
+export interface RapportMode {
+  mode: ModePaiement
+  nombre: number
+  total: number
+}
+
+export interface RapportTopClient {
+  id: number
+  nom: string
+  nombre_factures: number
+  montant: number
+}
+
+export interface RapportAvocat {
+  id: number
+  nom_complet: string
+  dossiers: number
+}
+
+export interface RapportSynthese {
+  periode: RapportPeriode
+  nouveaux_clients: number
+  dossiers_ouverts: number
+  dossiers_clotures: number
+  dossiers_par_statut: RapportStatut[]
+  facturation: {
+    nb_factures: number
+    facture: number
+    encaisse: number
+    impaye: number
+  }
+  paiements: {
+    nombre: number
+    total: number
+    par_mode: RapportMode[]
+  }
+  top_clients: RapportTopClient[]
+  par_avocat: RapportAvocat[]
+}
+
+export interface RapportEvolutionPoint {
+  periode: string
+  factures: number
+  encaisse: number
+  dossiers: number
+}
+
+export interface RapportEvolution {
+  granularite: 'mois' | 'an'
+  periode: RapportPeriode
+  data: RapportEvolutionPoint[]
 }

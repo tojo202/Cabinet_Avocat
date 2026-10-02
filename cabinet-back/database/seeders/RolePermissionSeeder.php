@@ -25,6 +25,8 @@ class RolePermissionSeeder extends Seeder
             'avocats.view', 'avocats.manage',
             'dashboard.view',
             'parametres.manage',
+            'utilisateurs.manage',
+            'rapports.view',
         ];
 
         foreach ($permissions as $permission) {
@@ -41,6 +43,7 @@ class RolePermissionSeeder extends Seeder
                 'evenements.view', 'evenements.manage',
                 'avocats.view',
                 'dashboard.view',
+                'rapports.view',
             ],
             'secretaire' => [
                 'clients.view', 'clients.create', 'clients.update', 'clients.export',
@@ -58,6 +61,7 @@ class RolePermissionSeeder extends Seeder
                 'evenements.view',
                 'avocats.view',
                 'dashboard.view',
+                'rapports.view',
             ],
         ];
 

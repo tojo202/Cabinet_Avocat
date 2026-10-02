@@ -223,7 +223,10 @@ class FactureController extends Controller
     {
         $this->authorize('delete', $facture);
 
-        $facture->delete();
+        DB::transaction(function () use ($facture) {
+            $facture->paiements()->delete();
+            $facture->delete();
+        });
 
         return response()->json(null, 204);
     }

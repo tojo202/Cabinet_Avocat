@@ -8,7 +8,11 @@ use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\DossierController;
 use App\Http\Controllers\Api\V1\EvenementController;
 use App\Http\Controllers\Api\V1\FactureController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaiementController;
+use App\Http\Controllers\Api\V1\RapportController;
+use App\Http\Controllers\Api\V1\SettingController;
+use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -46,5 +50,16 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('evenements', EvenementController::class);
         Route::apiResource('avocats', AvocatController::class);
+
+        Route::get('/notifications', [NotificationController::class, 'index']);
+
+        Route::get('/settings', [SettingController::class, 'show']);
+        Route::put('/settings', [SettingController::class, 'update']);
+
+        Route::get('/rapports/synthese', [RapportController::class, 'synthese']);
+        Route::get('/rapports/evolution', [RapportController::class, 'evolution']);
+        Route::get('/rapports/export', [RapportController::class, 'export']);
+
+        Route::apiResource('users', UserController::class);
     });
 });

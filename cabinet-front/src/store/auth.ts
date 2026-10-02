@@ -11,7 +11,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'documents.view', 'documents.manage',
     'evenements.view', 'evenements.manage',
     'avocats.view', 'avocats.manage',
-    'dashboard.view', 'parametres.manage',
+    'dashboard.view', 'parametres.manage', 'utilisateurs.manage', 'rapports.view',
   ],
   avocat: [
     'clients.view', 'clients.create', 'clients.update',
@@ -21,6 +21,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'evenements.view', 'evenements.manage',
     'avocats.view',
     'dashboard.view',
+    'rapports.view',
   ],
   secretaire: [
     'clients.view', 'clients.create', 'clients.update', 'clients.export',
@@ -38,6 +39,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'evenements.view',
     'avocats.view',
     'dashboard.view',
+    'rapports.view',
   ],
 }
 

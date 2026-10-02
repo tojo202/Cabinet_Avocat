@@ -30,14 +30,39 @@ api.interceptors.response.use(
   },
 )
 
+type ApiErrorBody = { message?: string; errors?: Record<string, string[]> }
+
+function messageFromBody(body: ApiErrorBody | undefined): string | null {
+  if (!body) return null
+  if (body.errors) {
+    const first = Object.values(body.errors).flat()[0]
+    if (first) return first
+  }
+  return body.message ?? null
+}
+
 export function apiErrorMessage(error: unknown, fallback = 'Une erreur est survenue.'): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as { message?: string; errors?: Record<string, string[]> } | undefined
-    if (data?.errors) {
-      return Object.values(data.errors).flat()[0] ?? data.message ?? fallback
-    }
-    if (data?.message) return data.message
+    if (error.response?.data instanceof Blob) return fallback
+    const message = messageFromBody(error.response?.data as ApiErrorBody | undefined)
+    if (message) return message
     if (error.code === 'ERR_NETWORK') return 'Serveur injoignable.'
   }
   return fallback
+}
+
+export async function apiErrorMessageAsync(
+  error: unknown,
+  fallback = 'Une erreur est survenue.',
+): Promise<string> {
+  if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+    try {
+      const body = JSON.parse(await error.response.data.text()) as ApiErrorBody
+      const message = messageFromBody(body)
+      if (message) return message
+    } catch {
+      return fallback
+    }
+  }
+  return apiErrorMessage(error, fallback)
 }

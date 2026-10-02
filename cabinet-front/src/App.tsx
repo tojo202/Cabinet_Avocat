@@ -12,6 +12,8 @@ import { DocumentsPage } from './features/documents/DocumentsPage'
 import { CalendrierPage } from './features/calendrier/CalendrierPage'
 import { AvocatsPage } from './features/avocats/AvocatsPage'
 import { AdministrationPage } from './features/administration/AdministrationPage'
+import { ParametresPage } from './features/parametres/ParametresPage'
+import { RapportsPage } from './features/rapports/RapportsPage'
 
 export default function App() {
   return (
@@ -38,6 +40,8 @@ export default function App() {
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/calendrier" element={<CalendrierPage />} />
             <Route path="/avocats" element={<AvocatsPage />} />
+            <Route path="/rapports" element={<RapportsPage />} />
+            <Route path="/parametres" element={<ParametresPage />} />
             <Route path="/administration" element={<AdministrationPage />} />
           </Route>
 

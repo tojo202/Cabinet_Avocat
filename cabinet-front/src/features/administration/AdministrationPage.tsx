@@ -1,32 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
 import {
-  Activity,
-  Briefcase,
-  CalendarDays,
   CircleCheck,
   CircleX,
-  Clock,
-  CreditCard,
-  Database,
-  FileText,
-  Globe,
-  Info,
-  Lock,
+  History,
   ScrollText,
-  Server,
-  ShieldCheck,
-  Users,
-  Wallet,
+  Search,
 } from 'lucide-react'
-import { useEffect, useState, type FormEvent } from 'react'
-import { toast } from 'sonner'
-import { api } from '@/lib/axios'
-import { formatDateTime, ROLES_LABELS } from '@/lib/format'
+import { useState } from 'react'
+import { useDossierActivites, useDossiers } from '@/hooks/use-dossiers'
+import { formatDateTime, ROLES_LABELS, STATUT_DOSSIER_LABELS } from '@/lib/format'
 import { useAuth } from '@/store/auth'
-import type { DashboardStats, Role } from '@/types'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import type { ActivityEntry, Role } from '@/types'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -35,7 +19,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -53,7 +36,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
 
 const ROLE_KEYS: Role[] = ['admin', 'avocat', 'secretaire', 'comptable']
 
@@ -65,7 +47,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'documents.view', 'documents.manage',
     'evenements.view', 'evenements.manage',
     'avocats.view', 'avocats.manage',
-    'dashboard.view', 'parametres.manage',
+    'dashboard.view', 'parametres.manage', 'utilisateurs.manage', 'rapports.view',
   ],
   avocat: [
     'clients.view', 'clients.create', 'clients.update',
@@ -75,6 +57,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'evenements.view', 'evenements.manage',
     'avocats.view',
     'dashboard.view',
+    'rapports.view',
   ],
   secretaire: [
     'clients.view', 'clients.create', 'clients.update', 'clients.export',
@@ -92,6 +75,7 @@ const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'evenements.view',
     'avocats.view',
     'dashboard.view',
+    'rapports.view',
   ],
 }
 
@@ -107,233 +91,123 @@ const PERMISSION_GROUPS: { label: string; permissions: string[] }[] = [
   { label: 'Paiements', permissions: ['paiements.manage'] },
   { label: 'Documents', permissions: ['documents.view', 'documents.manage'] },
   { label: 'Avocats', permissions: ['avocats.view', 'avocats.manage'] },
-  { label: 'Administration', permissions: ['parametres.manage'] },
-]
-
-const DEVISES = [
-  { value: 'MGA', label: 'Ariary malgache (MGA)' },
-  { value: 'EUR', label: 'Euro (EUR)' },
-  { value: 'USD', label: 'Dollar américain (USD)' },
-]
-
-const FUSEAUX = [
-  { value: 'Indian/Antananarivo', label: 'Indian/Antananarivo (UTC+3)' },
-  { value: 'Europe/Paris', label: 'Europe/Paris (UTC+1/+2)' },
-  { value: 'UTC', label: 'UTC' },
+  { label: 'Rapports', permissions: ['rapports.view'] },
+  { label: 'Paramètres système', permissions: ['parametres.manage'] },
+  { label: 'Utilisateurs', permissions: ['utilisateurs.manage'] },
 ]
 
 function groupHasAccess(role: Role, permissions: string[]): boolean {
   return permissions.some((permission) => ROLE_PERMISSIONS[role].includes(permission))
 }
 
-function initiales(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+const EVENT_LABELS: Record<string, string> = {
+  created: 'Création',
+  updated: 'Modification',
+  deleted: 'Suppression',
+}
+
+const DESCRIPTION_LABELS: Record<string, string> = {
+  created: 'Création de l’enregistrement',
+  updated: 'Mise à jour de l’enregistrement',
+  deleted: 'Suppression de l’enregistrement',
+}
+
+function eventBadge(event: string | null): 'default' | 'secondary' | 'destructive' | 'outline' {
+  if (event === 'created') return 'default'
+  if (event === 'updated') return 'secondary'
+  if (event === 'deleted') return 'destructive'
+  if (event === null) return 'secondary'
+  return 'outline'
+}
+
+function activityLabel(activity: ActivityEntry): string {
+  if (activity.event) return EVENT_LABELS[activity.event] ?? activity.event
+  return activity.log_name === 'dossier' ? 'Statut' : 'Action'
+}
+
+function activityDescription(activity: ActivityEntry): string {
+  return DESCRIPTION_LABELS[activity.description] ?? activity.description
+}
+
+function activityProperty(activity: ActivityEntry, key: string): unknown {
+  const properties = activity.properties as unknown
+  if (properties && typeof properties === 'object' && !Array.isArray(properties)) {
+    return (properties as Record<string, unknown>)[key]
+  }
+  return undefined
+}
+
+function statutLabel(value: string): string {
+  const labels = STATUT_DOSSIER_LABELS as Record<string, string>
+  return labels[value] ?? value
+}
+
+function journalEmpty(message: string) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-12 text-center">
+      <ScrollText className="size-12 stroke-[1.5] text-muted-foreground/60" />
+      <p className="text-base font-medium text-foreground">Journal vide</p>
+      <p className="max-w-sm text-sm text-muted-foreground">{message}</p>
+    </div>
+  )
 }
 
 export function AdministrationPage() {
-  const user = useAuth((s) => s.user)
   const can = useAuth((s) => s.can)
-  const canDashboard = can('dashboard.view')
+  const canViewDossiers = can('dossiers.view')
 
-  const [tab, setTab] = useState('parametres')
-  const [now, setNow] = useState(() => new Date())
-  const [settings, setSettings] = useState({
-    nom_cabinet: 'CabinetPro',
-    raison_sociale: '',
-    adresse: '',
-    telephone: '',
-    email: '',
-    devise: 'MGA',
-    fuseau: 'Indian/Antananarivo',
-    en_tete_facture: '',
-  })
+  const [tab, setTab] = useState('roles')
+  const [journalDossierId, setJournalDossierId] = useState<number | null>(null)
+  const [journalFilter, setJournalFilter] = useState('')
 
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(new Date()), 1000)
-    return () => window.clearInterval(interval)
-  }, [])
+  const dossiersQuery = useDossiers({ per_page: 100 })
+  const journalQuery = useDossierActivites(journalDossierId)
 
-  const apiStatusQuery = useQuery({
-    queryKey: ['administration', 'api-status'],
-    queryFn: async () => {
-      const res = await api.get('/auth/me')
-      return res.status
-    },
-    retry: false,
-  })
+  const dossiers = dossiersQuery.data?.data ?? []
 
-  const statsQuery = useQuery<DashboardStats>({
-    queryKey: ['dashboard', 'stats'],
-    queryFn: async () => {
-      const res = await api.get('/dashboard/stats')
-      return res.data
-    },
-    enabled: canDashboard,
-  })
+  const dossiersFiltres = journalFilter.trim()
+    ? dossiers.filter((dossier) => {
+        const term = journalFilter.trim().toLowerCase()
+        return (
+          dossier.reference.toLowerCase().includes(term) ||
+          dossier.titre.toLowerCase().includes(term) ||
+          (dossier.client?.nom_complet ?? '').toLowerCase().includes(term)
+        )
+      })
+    : dossiers
 
-  function handleSaveSettings(event: FormEvent) {
-    event.preventDefault()
-    toast.success('Paramètres enregistrés.', {
-      description: 'La sauvegarde serveur arrive prochainement.',
-    })
+  const journalOptions: { value: string; label: string }[] = [
+    { value: 'choisir', label: 'Sélectionnez un dossier' },
+    ...dossiersFiltres.map((dossier) => ({
+      value: String(dossier.id),
+      label: `${dossier.reference} — ${dossier.titre}`,
+    })),
+  ]
+
+  if (journalDossierId !== null) {
+    const selected = dossiers.find((dossier) => dossier.id === journalDossierId)
+    if (selected && !journalOptions.some((option) => option.value === String(journalDossierId))) {
+      journalOptions.push({
+        value: String(selected.id),
+        label: `${selected.reference} — ${selected.titre}`,
+      })
+    }
   }
-
-  const roleLabel = user ? ROLES_LABELS[user.role] : '—'
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Administration</h1>
         <p className="text-sm text-muted-foreground">
-          Paramètres du cabinet, rôles & permissions, comptes utilisateurs et santé du système
+          Rôles & permissions et journal d'activité du cabinet
         </p>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="parametres">Paramètres généraux</TabsTrigger>
           <TabsTrigger value="roles">Rôles & permissions</TabsTrigger>
-          <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
-          <TabsTrigger value="systeme">Système</TabsTrigger>
+          <TabsTrigger value="journal">Journal d'activité</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="parametres">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">Paramètres généraux</CardTitle>
-              <CardDescription>
-                Identité du cabinet, coordonnées et préférences de facturation. Ces valeurs sont
-                encore locales : la persistance serveur arrive prochainement.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSaveSettings} className="space-y-5">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="param-nom">Nom du cabinet</Label>
-                    <Input
-                      id="param-nom"
-                      value={settings.nom_cabinet}
-                      onChange={(event) =>
-                        setSettings({ ...settings, nom_cabinet: event.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="param-raison">Raison sociale</Label>
-                    <Input
-                      id="param-raison"
-                      placeholder="SARL ou raison sociale complète"
-                      value={settings.raison_sociale}
-                      onChange={(event) =>
-                        setSettings({ ...settings, raison_sociale: event.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="param-adresse">Adresse</Label>
-                    <Textarea
-                      id="param-adresse"
-                      placeholder="Rue, quartier, ville"
-                      value={settings.adresse}
-                      onChange={(event) =>
-                        setSettings({ ...settings, adresse: event.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="param-telephone">Téléphone</Label>
-                    <Input
-                      id="param-telephone"
-                      placeholder="+261 34 00 00 000"
-                      value={settings.telephone}
-                      onChange={(event) =>
-                        setSettings({ ...settings, telephone: event.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="param-email">E-mail</Label>
-                    <Input
-                      id="param-email"
-                      type="email"
-                      placeholder="contact@cabinet.mg"
-                      value={settings.email}
-                      onChange={(event) =>
-                        setSettings({ ...settings, email: event.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="param-devise">Devise</Label>
-                    <Select
-                      value={settings.devise}
-                      onValueChange={(value) =>
-                        setSettings({ ...settings, devise: String(value) })
-                      }
-                    >
-                      <SelectTrigger id="param-devise" className="w-full">
-                        <SelectValue placeholder="Devise" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DEVISES.map((devise) => (
-                          <SelectItem key={devise.value} value={devise.value}>
-                            {devise.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="param-fuseau">Fuseau horaire</Label>
-                    <Select
-                      value={settings.fuseau}
-                      onValueChange={(value) =>
-                        setSettings({ ...settings, fuseau: String(value) })
-                      }
-                    >
-                      <SelectTrigger id="param-fuseau" className="w-full">
-                        <SelectValue placeholder="Fuseau horaire" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {FUSEAUX.map((fuseau) => (
-                          <SelectItem key={fuseau.value} value={fuseau.value}>
-                            {fuseau.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="param-entete">En-tête de facture</Label>
-                    <Textarea
-                      id="param-entete"
-                      placeholder="Texte imprimé en tête de chaque facture"
-                      value={settings.en_tete_facture}
-                      onChange={(event) =>
-                        setSettings({ ...settings, en_tete_facture: event.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-4 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-3">
-                  <p className="flex items-start gap-2 text-xs text-muted-foreground">
-                    <Info className="mt-0.5 size-3.5 shrink-0" />
-                    Les paramètres ne sont pas encore synchronisés avec le serveur : ils seront
-                    persistants dès la mise en place de l'API dédiée.
-                  </p>
-                  <Button type="submit" size="sm" className="shrink-0">
-                    Enregistrer les paramètres
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="roles">
           <Card>
@@ -395,274 +269,126 @@ export function AdministrationPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="utilisateurs">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">Compte courant</CardTitle>
-                <CardDescription>Informations de la session en cours.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <Avatar className="size-12">
-                    <AvatarFallback className="bg-primary/15 text-sm text-primary">
-                      {user ? initiales(user.name) : '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex min-w-0 flex-col">
-                    <span className="truncate font-semibold text-foreground">
-                      {user?.name ?? '—'}
-                    </span>
-                    <span className="truncate text-sm text-muted-foreground">
-                      {user?.email ?? '—'}
-                    </span>
-                  </div>
-                  <Badge className="ml-auto">{roleLabel}</Badge>
-                </div>
-                <dl className="mt-5 grid gap-3 border-t pt-4 text-sm sm:grid-cols-2">
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-xs text-muted-foreground">Identifiant</dt>
-                    <dd className="font-medium">{user?.id ?? '—'}</dd>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-xs text-muted-foreground">Rôle</dt>
-                    <dd className="font-medium">{roleLabel}</dd>
-                  </div>
-                </dl>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
+        <TabsContent value="journal">
+          <Card>
+            <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
                 <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Users className="size-4 text-primary" />
-                  Gestion des utilisateurs
-                </CardTitle>
-                <CardDescription>Comptes, invitations et réinitialisations.</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-border bg-muted/30 p-5">
-                <p className="text-sm text-muted-foreground">
-                  L'administration des comptes utilisateurs (création, réattribution de rôle,
-                  suppression) arrive prochainement : l'API dédiée n'est pas encore disponible.
-                </p>
-                <Button variant="outline" size="sm" disabled>
-                  Gérer les comptes
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="systeme">
-          <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Statut de l'API
-                  </CardTitle>
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Server className="size-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {apiStatusQuery.isLoading ? (
-                    <Skeleton className="h-6 w-28" />
-                  ) : apiStatusQuery.isError ? (
-                    <Badge variant="destructive">Erreur</Badge>
-                  ) : (
-                    <Badge variant="default">Connecté</Badge>
-                  )}
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Dernière vérification : {formatDateTime(now.toISOString())}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Version de l'application
-                  </CardTitle>
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-                    <ScrollText className="size-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0.0.0</div>
-                  <p className="mt-1 text-xs text-muted-foreground">CabinetPro • build front</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Base URL de l'API
-                  </CardTitle>
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-                    <Globe className="size-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="font-mono text-lg font-bold">{api.defaults.baseURL}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">Sanctum • Bearer token</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Rôle actif
-                  </CardTitle>
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600">
-                    <ShieldCheck className="size-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{roleLabel}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {user?.email ?? 'Session non connectée'}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Date & heure
-                  </CardTitle>
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
-                    <Clock className="size-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-bold">{formatDateTime(now.toISOString())}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Fuseau {settings.fuseau}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Environnement
-                  </CardTitle>
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-                    <Database className="size-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-bold">Production</div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Laravel • Vite • React
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Activity className="size-4 text-primary" />
-                  Indicateurs clés
+                  <History className="size-4 text-primary" />
+                  Journal d'activité
                 </CardTitle>
                 <CardDescription>
-                  Données temps réel du tableau de bord.
+                  Les 50 dernières actions enregistrées sur le dossier sélectionné.
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!canDashboard ? (
-                  <p className="py-6 text-center text-sm text-muted-foreground">
-                    Les indicateurs sont réservés aux rôles disposant du droit « Tableau de bord ».
-                  </p>
-                ) : statsQuery.isLoading ? (
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                  </div>
-                ) : statsQuery.isError ? (
-                  <p className="py-6 text-center text-sm text-muted-foreground">
-                    Impossible de charger les statistiques du tableau de bord.
-                  </p>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="flex items-center gap-3 rounded-lg border border-border p-4">
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Users className="size-4" />
-                      </div>
-                      <div>
-                        <div className="text-xl font-bold">
-                          {statsQuery.data?.clients_actifs ?? 0}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Clients actifs</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-lg border border-border p-4">
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-                        <Briefcase className="size-4" />
-                      </div>
-                      <div>
-                        <div className="text-xl font-bold">
-                          {statsQuery.data?.dossiers_en_cours ?? 0}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Dossiers en cours</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-lg border border-border p-4">
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-                        <FileText className="size-4" />
-                      </div>
-                      <div>
-                        <div className="text-xl font-bold">
-                          {statsQuery.data?.total_documents ?? 0}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Documents</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="w-56 pl-8"
+                    placeholder="Référence, titre, client…"
+                    value={journalFilter}
+                    onChange={(event) => setJournalFilter(event.target.value)}
+                  />
+                </div>
+                <Select
+                  items={journalOptions}
+                  value={journalDossierId === null ? 'choisir' : String(journalDossierId)}
+                  onValueChange={(value) =>
+                    setJournalDossierId(!value || value === 'choisir' ? null : Number(value))
+                  }
+                >
+                  <SelectTrigger className="w-full sm:w-72">
+                    <SelectValue placeholder="Sélectionnez un dossier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {journalOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {!canViewDossiers ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  La consultation des dossiers n'est pas autorisée pour votre rôle.
+                </p>
+              ) : dossiersQuery.isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ) : dossiersQuery.isError ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Impossible de charger la liste des dossiers.
+                </p>
+              ) : journalDossierId === null ? (
+                journalEmpty('Choisissez un dossier pour afficher son historique d’actions.')
+              ) : journalQuery.isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ) : journalQuery.isError ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Impossible de charger le journal de ce dossier.
+                </p>
+              ) : (journalQuery.data ?? []).length === 0 ? (
+                journalEmpty('Aucune action enregistrée sur ce dossier.')
+              ) : (
+                <ol className="divide-y divide-border rounded-lg border border-border">
+                  {(journalQuery.data ?? []).map((activity: ActivityEntry) => {
+                    const ancien = activityProperty(activity, 'ancien_statut')
+                    const nouveau = activityProperty(activity, 'nouveau_statut')
+                    const hasStatut =
+                      typeof ancien === 'string' && typeof nouveau === 'string'
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="flex items-start gap-3 rounded-lg border border-border p-4">
-                <Lock className="mt-0.5 size-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Sécurité</p>
-                  <p className="text-xs text-muted-foreground">
-                    Jetons Sanctum, rôles Spatie Permissions.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 rounded-lg border border-border p-4">
-                <CalendarDays className="mt-0.5 size-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Dernière connexion</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDateTime(now.toISOString())}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 rounded-lg border border-border p-4">
-                <CreditCard className="mt-0.5 size-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Devise</p>
-                  <p className="text-xs text-muted-foreground">
-                    {DEVISES.find((devise) => devise.value === settings.devise)?.label ?? '—'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+                    return (
+                      <li
+                        key={activity.id}
+                        className="flex flex-col gap-1.5 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+                      >
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Badge variant={eventBadge(activity.event)}>
+                            {activityLabel(activity)}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDateTime(activity.created_at)}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-foreground">
+                            {activityDescription(activity)}
+                          </p>
+                          {hasStatut && (
+                            <p className="text-xs text-muted-foreground">
+                              {statutLabel(ancien)} → {statutLabel(nouveau)}
+                            </p>
+                          )}
+                        </div>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {activity.causer?.name ?? 'Système'}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ol>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
       <div className="flex items-start gap-2 rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
-        <Wallet className="mt-0.5 size-3.5 shrink-0" />
+        <History className="mt-0.5 size-3.5 shrink-0" />
         <span>
-          Toute modification des paramètres du cabinet sera auditable dans le journal d'activité.
+          Le journal d'activité retrace les actions sur les dossiers. Les paramètres du cabinet et
+          la gestion des comptes utilisateurs sont disponibles dans la rubrique Paramètres.
         </span>
       </div>
     </div>

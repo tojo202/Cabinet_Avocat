@@ -1458,6 +1458,465 @@
                     }
                 ]
             }
+        },
+        "/api/v1/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Centre de notifications (alertes métier)",
+                "operationId": "cac3bdde44f0be0512f7d05c0a6064e4",
+                "responses": {
+                    "200": {
+                        "description": "Alertes de l'utilisateur courant"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/paiements": {
+            "get": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Liste des paiements enregistrés",
+                "operationId": "e910c5c7c4afa7fa37862ee923112f5a",
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination des paiements"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/paiements/stats": {
+            "get": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Statistiques des encaissements",
+                "operationId": "741476902e85e4671f90244e905f2020",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/rapports/synthese": {
+            "get": {
+                "tags": [
+                    "Rapports"
+                ],
+                "summary": "Synthèse d'activité sur une période",
+                "operationId": "69e9d056d919f9df7c6aec2b3fe7ab7b",
+                "parameters": [
+                    {
+                        "name": "debut",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fin",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Synthèse (KPI, répartitions, tops)"
+                    },
+                    "403": {
+                        "description": "Droit « rapports.view » requis"
+                    },
+                    "422": {
+                        "description": "Période invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/rapports/evolution": {
+            "get": {
+                "tags": [
+                    "Rapports"
+                ],
+                "summary": "Évolution mensuelle (ou annuelle) de l'activité",
+                "operationId": "304e3f2add59c7803c3201fdf7730e15",
+                "parameters": [
+                    {
+                        "name": "debut",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fin",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Série temporelle pour les graphiques"
+                    },
+                    "403": {
+                        "description": "Droit « rapports.view » requis"
+                    },
+                    "422": {
+                        "description": "Période invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/rapports/export": {
+            "get": {
+                "tags": [
+                    "Rapports"
+                ],
+                "summary": "Export CSV des factures de la période",
+                "operationId": "ed7e8095ca0d30346359f5a03f7cece4",
+                "parameters": [
+                    {
+                        "name": "debut",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fin",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier CSV"
+                    },
+                    "403": {
+                        "description": "Droit « rapports.view » requis"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/settings": {
+            "get": {
+                "tags": [
+                    "Paramètres"
+                ],
+                "summary": "Paramètres système du cabinet",
+                "operationId": "1453dd7696928bfde7379c734c8c7a73",
+                "responses": {
+                    "200": {
+                        "description": "Paramètres du cabinet"
+                    },
+                    "403": {
+                        "description": "Droit « parametres.manage » requis"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Paramètres"
+                ],
+                "summary": "Enregistrer les paramètres système du cabinet",
+                "operationId": "6e0d4b80e54db33f93221cccbf9e296b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "parametres": {
+                                        "type": "object",
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paramètres enregistrés"
+                    },
+                    "403": {
+                        "description": "Droit « parametres.manage » requis"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users": {
+            "get": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Liste des utilisateurs",
+                "operationId": "12e989554c281d650dff75443acabf54",
+                "parameters": [
+                    {
+                        "name": "filter[role]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "admin",
+                                "avocat",
+                                "secretaire",
+                                "comptable"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "filter[search]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination des utilisateurs"
+                    },
+                    "403": {
+                        "description": "Droit « utilisateurs.manage » requis"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Créer un utilisateur",
+                "operationId": "64da9b5a20fa4f20e947ed61b2bbb6da",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Utilisateur"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Utilisateur créé"
+                    },
+                    "403": {
+                        "description": "Droit « utilisateurs.manage » requis"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/{user}": {
+            "get": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Détail d'un utilisateur",
+                "operationId": "919fd317e275a070bcadcf4874123e45",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur"
+                    },
+                    "403": {
+                        "description": "Droit « utilisateurs.manage » requis"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Supprimer un utilisateur",
+                "operationId": "17c42665206652a0fd309e2f348f97ed",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Utilisateur supprimé"
+                    },
+                    "403": {
+                        "description": "Droit « utilisateurs.manage » requis"
+                    },
+                    "422": {
+                        "description": "Suppression impossible"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Modifier un utilisateur",
+                "operationId": "31318f75f8ec03dcf063a1333fde6b01",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Utilisateur"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur modifié"
+                    },
+                    "403": {
+                        "description": "Droit « utilisateurs.manage » requis"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1754,6 +2213,37 @@
                     }
                 },
                 "type": "object"
+            },
+            "Utilisateur": {
+                "required": [
+                    "name",
+                    "email",
+                    "role"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "admin",
+                            "avocat",
+                            "secretaire",
+                            "comptable"
+                        ]
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             }
         }
     },
@@ -1789,6 +2279,26 @@
         {
             "name": "Facturation",
             "description": "Facturation"
+        },
+        {
+            "name": "Notifications",
+            "description": "Notifications"
+        },
+        {
+            "name": "Paiements",
+            "description": "Paiements"
+        },
+        {
+            "name": "Rapports",
+            "description": "Rapports"
+        },
+        {
+            "name": "Paramètres",
+            "description": "Paramètres"
+        },
+        {
+            "name": "Utilisateurs",
+            "description": "Utilisateurs"
         }
     ]
 }

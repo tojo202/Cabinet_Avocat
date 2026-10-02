@@ -152,7 +152,7 @@ export function AvocatsPage() {
     queryKey: ['avocats', detailId],
     queryFn: async () => {
       const res = await api.get(`/avocats/${detailId}`)
-      return res.data
+      return res.data.data ?? res.data
     },
     enabled: detailId !== null,
   })
