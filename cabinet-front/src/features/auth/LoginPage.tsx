@@ -8,6 +8,7 @@ import { useAuth } from '@/store/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 export function LoginPage() {
   const login = useAuth((s) => s.login)
@@ -38,6 +39,7 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+      {mutation.isPending && <LoadingScreen />}
       <div className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-background p-8 shadow-sm">
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">

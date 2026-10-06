@@ -110,6 +110,35 @@ test('la création de dossier génère une référence DOS', function () {
     expect($response->json('data.reference'))->toMatch('/^DOS-\d{4}-\d{3}$/');
 });
 
+test('la liste des dossiers accepte le tri -created_at envoyé par le front', function () {
+    $admin = apiUserWithRole('admin');
+    Dossier::factory()->create();
+
+    $this->actingAs($admin, 'sanctum')
+        ->getJson('/api/v1/dossiers?sort=-created_at&per_page=15')
+        ->assertOk();
+});
+
+test('un avocat retrouve dans la liste le dossier qu\'il vient de créer', function () {
+    $avocatUser = apiUserWithRole('avocat');
+    Avocat::factory()->create(['user_id' => $avocatUser->id]);
+    $client = Client::factory()->create();
+
+    $response = $this->actingAs($avocatUser, 'sanctum')
+        ->postJson('/api/v1/dossiers', [
+            'client_id' => $client->id,
+            'titre' => 'Dossier créé par l\'avocat',
+            'type_droit' => 'pénal',
+            'date_ouverture' => now()->toDateString(),
+        ])
+        ->assertCreated();
+
+    $this->actingAs($avocatUser, 'sanctum')
+        ->getJson('/api/v1/dossiers?sort=-created_at&per_page=15')
+        ->assertOk()
+        ->assertJsonFragment(['id' => $response->json('data.id')]);
+});
+
 test('le changement de statut d\'un dossier fonctionne', function () {
     $admin = apiUserWithRole('admin');
     $dossier = Dossier::factory()->create();

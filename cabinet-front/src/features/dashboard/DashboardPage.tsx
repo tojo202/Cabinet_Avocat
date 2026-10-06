@@ -144,7 +144,7 @@ export function DashboardPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Dossiers en cours
             </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-brown/10 text-brown">
               <FolderOpen className="size-4" />
             </div>
           </CardHeader>
@@ -229,11 +229,11 @@ export function DashboardPage() {
                 <span>Dossiers</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-full bg-blue-500" />
+                <span className="size-2.5 rounded-full bg-brown" />
                 <span>Rendez-vous</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-full bg-amber-500" />
+                <span className="size-2.5 rounded-full bg-muted-foreground" />
                 <span>Audiences</span>
               </div>
             </div>
@@ -255,12 +255,12 @@ export function DashboardPage() {
                       <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorRdv" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--brown)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--brown)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorAudiences" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--muted-foreground)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--muted-foreground)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -295,7 +295,7 @@ export function DashboardPage() {
                     type="monotone"
                     dataKey="rendez_vous"
                     name="Rendez-vous"
-                    stroke="#3b82f6"
+                    stroke="var(--brown)"
                     fillOpacity={1}
                     fill="url(#colorRdv)"
                   />
@@ -303,7 +303,7 @@ export function DashboardPage() {
                     type="monotone"
                     dataKey="audiences"
                     name="Audiences"
-                    stroke="#f59e0b"
+                    stroke="var(--muted-foreground)"
                     fillOpacity={1}
                     fill="url(#colorAudiences)"
                   />

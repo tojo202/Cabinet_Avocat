@@ -63,7 +63,7 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                 cn(
                   'flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
                     : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
                 )
               }

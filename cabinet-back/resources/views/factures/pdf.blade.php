@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <title>Facture {{ $facture->numero }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 13px; color: #1f2937; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 13px; color: #1C1917; }
         .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
-        .logo { font-size: 24px; font-weight: bold; color: #1e3a8a; }
+        .logo { font-size: 24px; font-weight: bold; color: #6E1A35; }
         h1 { font-size: 20px; margin: 0 0 5px; }
         .meta { text-align: right; }
         .meta p { margin: 3px 0; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background-color: #1e3a8a; color: #fff; padding: 8px; text-align: left; }
+        th { background-color: #6E1A35; color: #fff; padding: 8px; text-align: left; }
         td { padding: 8px; border-bottom: 1px solid #e5e7eb; }
         .right { text-align: right; }
         .totals { width: 40%; margin-left: auto; margin-top: 15px; }
         .totals td { border: none; padding: 4px 8px; }
-        .total-row td { font-weight: bold; font-size: 16px; border-top: 2px solid #1e3a8a; }
+        .total-row td { font-weight: bold; font-size: 16px; border-top: 2px solid #6E1A35; }
         .badge { display: inline-block; padding: 3px 10px; border-radius: 10px; background: #e5e7eb; }
         .mentions { margin-top: 40px; font-size: 10px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; }
     </style>

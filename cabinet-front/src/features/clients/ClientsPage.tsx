@@ -117,11 +117,11 @@ const SORT_OPTIONS = [
 
 const AVATAR_COLORS = [
   'bg-primary/15 text-primary',
-  'bg-blue-500/15 text-blue-600',
+  'bg-brown/15 text-brown',
   'bg-emerald-500/15 text-emerald-600',
   'bg-amber-500/15 text-amber-600',
-  'bg-violet-500/15 text-violet-600',
-  'bg-rose-500/15 text-rose-600',
+  'bg-muted-foreground/15 text-muted-foreground',
+  'bg-destructive/15 text-destructive',
 ]
 
 function toValues(client: Client | null): ClientFormValues {
@@ -233,13 +233,13 @@ export function ClientsPage() {
       label: 'Particuliers',
       value: stats?.particuliers,
       icon: User,
-      tone: 'bg-blue-500/10 text-blue-600',
+      tone: 'bg-brown/10 text-brown',
     },
     {
       label: 'Sociétés',
       value: stats?.societes,
       icon: Building2,
-      tone: 'bg-violet-500/10 text-violet-600',
+      tone: 'bg-muted-foreground/10 text-muted-foreground',
     },
     {
       label: 'Nouveaux ce mois',

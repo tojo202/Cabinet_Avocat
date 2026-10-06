@@ -53,6 +53,7 @@ class DossierController extends Controller
                 AllowedSort::field('date_ouverture'),
                 AllowedSort::field('avancement'),
                 AllowedSort::field('montant'),
+                AllowedSort::field('created_at'),
             ])
             ->with(['client', 'avocats'])
             ->defaultSort('-created_at');
@@ -93,6 +94,11 @@ class DossierController extends Controller
         ]);
     }
 
+    /**
+     * Crée un dossier et y attache toujours le créateur quand c'est un avocat :
+     * la liste des dossiers d'un avocat est limitée aux dossiers qui lui sont
+     * assignés, sinon il ne verrait pas le dossier qu'il vient de créer.
+     */
     #[OA\Post(
         path: '/api/v1/dossiers',
         summary: 'Créer un dossier',
@@ -118,7 +124,12 @@ class DossierController extends Controller
         $data['statut'] ??= StatutDossier::EnCours->value;
         $data['priorite'] ??= PrioriteDossier::Normale->value;
         $dossier = Dossier::create($data);
-        $dossier->avocats()->sync($avocatIds);
+
+        if ($avocatCreateur = $request->user()->avocat) {
+            $avocatIds[] = $avocatCreateur->id;
+        }
+
+        $dossier->avocats()->sync(array_values(array_unique($avocatIds)));
 
         return (new DossierResource($dossier->load(['client', 'avocats'])))
             ->response()

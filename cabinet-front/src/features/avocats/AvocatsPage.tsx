@@ -94,11 +94,11 @@ const EMPTY_FORM: AvocatForm = {
 
 const AVATAR_COLORS = [
   'bg-primary/15 text-primary',
-  'bg-blue-500/15 text-blue-600',
+  'bg-brown/15 text-brown',
   'bg-emerald-500/15 text-emerald-600',
   'bg-amber-500/15 text-amber-600',
-  'bg-violet-500/15 text-violet-600',
-  'bg-rose-500/15 text-rose-600',
+  'bg-muted-foreground/15 text-muted-foreground',
+  'bg-destructive/15 text-destructive',
 ]
 
 function avatarColor(id: number): string {
@@ -349,7 +349,7 @@ export function AvocatsPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Dossiers assignés
             </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-brown/10 text-brown">
               <FolderOpen className="size-4" />
             </div>
           </CardHeader>

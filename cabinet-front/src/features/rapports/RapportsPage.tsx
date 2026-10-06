@@ -64,9 +64,9 @@ const PRESETS = [
 
 const PIE_COLORS = [
   'var(--primary)',
-  '#3b82f6',
-  '#f59e0b',
-  '#10b981',
+  'var(--brown)',
+  'var(--muted-foreground)',
+  'var(--chart-4)',
 ]
 
 const TOOLTIP_STYLE = {
@@ -268,7 +268,7 @@ export function RapportsPage() {
             label="Dossiers ouverts"
             value={String(synthese.dossiers_ouverts)}
             icon={<FileText className="size-4" />}
-            tone="bg-blue-500/10 text-blue-600"
+            tone="bg-brown/10 text-brown"
           />
           <KpiCard
             label="Dossiers clôturés"
@@ -280,7 +280,7 @@ export function RapportsPage() {
             label="Facturé"
             value={formatAriary(synthese.facturation.facture)}
             icon={<Wallet className="size-4" />}
-            tone="bg-violet-500/10 text-violet-600"
+            tone="bg-muted-foreground/15 text-muted-foreground"
             secondary={`${synthese.facturation.nb_factures} facture(s)`}
           />
           <KpiCard

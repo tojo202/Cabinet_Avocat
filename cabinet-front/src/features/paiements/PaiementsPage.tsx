@@ -52,8 +52,8 @@ const MODE_ICONS: Record<ModePaiement, typeof Banknote> = {
 
 const MODE_TONES: Record<ModePaiement, string> = {
   especes: 'bg-emerald-500/10 text-emerald-600',
-  virement: 'bg-blue-500/10 text-blue-600',
-  mobile_money: 'bg-violet-500/10 text-violet-600',
+  virement: 'bg-brown/10 text-brown',
+  mobile_money: 'bg-muted-foreground/10 text-muted-foreground',
   cheque: 'bg-amber-500/10 text-amber-600',
 }
 
@@ -98,7 +98,7 @@ export function PaiementsPage() {
       label: 'Encaissé ce mois',
       value: formatAriary(stats?.total_mois),
       hint: 'Période en cours',
-      tone: 'bg-blue-500/10 text-blue-600',
+      tone: 'bg-brown/10 text-brown',
       icon: Coins,
     },
     {

@@ -153,9 +153,9 @@ function toValues(dossier: Dossier | null): DossierFormValues {
 }
 
 const STATUT_TONES: Record<StatutDossier, string> = {
-  en_cours: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+  en_cours: 'bg-brown/10 text-brown border-brown/20',
   en_revision: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-  en_attente: 'bg-violet-500/10 text-violet-600 border-violet-500/20',
+  en_attente: 'bg-muted-foreground/10 text-muted-foreground border-muted-foreground/20',
   cloture: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
 }
 
@@ -279,7 +279,7 @@ export function DossiersPage() {
 
   const statCards = [
     { label: 'Total dossiers', value: stats?.total, tone: 'bg-primary/10 text-primary' },
-    { label: 'En cours', value: stats?.en_cours, tone: 'bg-blue-500/10 text-blue-600' },
+    { label: 'En cours', value: stats?.en_cours, tone: 'bg-brown/10 text-brown' },
     { label: 'Urgents', value: stats?.urgents, tone: 'bg-destructive/10 text-destructive' },
     { label: 'Clôturés', value: stats?.clotures, tone: 'bg-emerald-500/10 text-emerald-600' },
   ]

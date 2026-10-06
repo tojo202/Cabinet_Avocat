@@ -101,11 +101,11 @@ const FUSEAUX = [
 
 const AVATAR_COLORS = [
   'bg-primary/15 text-primary',
-  'bg-blue-500/15 text-blue-600',
+  'bg-brown/15 text-brown',
   'bg-emerald-500/15 text-emerald-600',
   'bg-amber-500/15 text-amber-600',
-  'bg-violet-500/15 text-violet-600',
-  'bg-rose-500/15 text-rose-600',
+  'bg-muted-foreground/15 text-muted-foreground',
+  'bg-destructive/15 text-destructive',
 ]
 
 const utilisateurSchema = z.object({
@@ -454,7 +454,7 @@ export function ParametresPage() {
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Version de l'application
                   </CardTitle>
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-brown/10 text-brown">
                     <ScrollText className="size-4" />
                   </div>
                 </CardHeader>
@@ -484,7 +484,7 @@ export function ParametresPage() {
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Rôle actif
                   </CardTitle>
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600">
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-muted-foreground/10 text-muted-foreground">
                     <ShieldCheck className="size-4" />
                   </div>
                 </CardHeader>
@@ -564,7 +564,7 @@ export function ParametresPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 rounded-lg border border-border p-4">
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                      <div className="flex size-9 items-center justify-center rounded-lg bg-brown/10 text-brown">
                         <Briefcase className="size-4" />
                       </div>
                       <div>

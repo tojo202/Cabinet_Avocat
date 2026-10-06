@@ -69,8 +69,8 @@ import { Textarea } from '@/components/ui/textarea'
 const TYPES: TypeEvenement[] = ['rendez_vous', 'audience', 'echeance']
 
 const EVENT_COLORS: Record<TypeEvenement, string> = {
-  rendez_vous: '#3b82f6',
-  audience: '#f59e0b',
+  rendez_vous: '#6E1A35',
+  audience: '#6B4423',
   echeance: '#ef4444',
 }
 
