@@ -110,8 +110,8 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Cards : 2 par ligne en mobile */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -126,7 +126,7 @@ export function DashboardPage() {
               <Skeleton className="h-8 w-20" />
             ) : (
               <div>
-                <div className="text-2xl font-bold">{stats?.clients_actifs ?? 0}</div>
+                <div className="text-xl font-bold break-words sm:text-2xl">{stats?.clients_actifs ?? 0}</div>
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                   <TrendingUp className="size-3 text-emerald-500" />
                   <span className="text-emerald-500 font-medium">
@@ -153,7 +153,7 @@ export function DashboardPage() {
               <Skeleton className="h-8 w-20" />
             ) : (
               <div>
-                <div className="text-2xl font-bold">{stats?.dossiers_en_cours ?? 0}</div>
+                <div className="text-xl font-bold break-words sm:text-2xl">{stats?.dossiers_en_cours ?? 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Affaires juridiques actives
                 </p>
@@ -176,7 +176,7 @@ export function DashboardPage() {
               <Skeleton className="h-8 w-20" />
             ) : (
               <div>
-                <div className="text-2xl font-bold text-destructive">
+                <div className="text-xl font-bold break-words text-destructive sm:text-2xl">
                   {stats?.dossiers_urgents ?? 0}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -201,7 +201,7 @@ export function DashboardPage() {
               <Skeleton className="h-8 w-20" />
             ) : (
               <div>
-                <div className="text-2xl font-bold">{stats?.total_documents ?? 0}</div>
+                <div className="text-xl font-bold break-words sm:text-2xl">{stats?.total_documents ?? 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Pièces & actes archivés
                 </p>

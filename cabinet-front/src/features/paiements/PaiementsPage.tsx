@@ -135,7 +135,7 @@ export function PaiementsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {summaryCards.map((card) => {
           const Icon = card.icon
           return (
@@ -153,7 +153,7 @@ export function PaiementsPage() {
                   <Skeleton className="h-8 w-24" />
                 ) : (
                   <div>
-                    <div className="text-2xl font-bold">{card.value}</div>
+                    <div className="text-xl font-bold break-words sm:text-2xl">{card.value}</div>
                     <p className="mt-1 text-xs text-muted-foreground">{card.hint}</p>
                   </div>
                 )}
@@ -163,14 +163,14 @@ export function PaiementsPage() {
         })}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {MODES.map((modeKey) => {
           const Icon = MODE_ICONS[modeKey]
           const stat = stats?.par_mode?.[modeKey]
           return (
             <Card key={modeKey}>
               <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <div
                     className={`flex size-10 items-center justify-center rounded-lg ${MODE_TONES[modeKey]}`}
                   >
@@ -185,7 +185,9 @@ export function PaiementsPage() {
                     </p>
                   </div>
                   <div className="ms-auto text-right">
-                    <p className="text-sm font-semibold">{formatAriary(stat?.total ?? 0)}</p>
+                    <p className="break-words text-sm font-semibold tabular-nums">
+                      {formatAriary(stat?.total ?? 0)}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -207,7 +209,7 @@ export function PaiementsPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  className="w-56 pl-8"
+                  className="w-40 pl-8 sm:w-56"
                   placeholder="Référence, facture, client…"
                   value={searchDossier}
                   onChange={(event) => setSearchDossier(event.target.value)}

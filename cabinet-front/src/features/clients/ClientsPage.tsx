@@ -286,7 +286,7 @@ export function ClientsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => {
           const Icon = card.icon
           return (
@@ -304,7 +304,7 @@ export function ClientsPage() {
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div>
-                    <div className="text-2xl font-bold">{card.value ?? 0}</div>
+                    <div className="text-xl font-bold break-words sm:text-2xl">{card.value ?? 0}</div>
                     <p className="mt-1 text-xs text-muted-foreground">Répertoire du cabinet</p>
                   </div>
                 )}
@@ -327,7 +327,7 @@ export function ClientsPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  className="w-56 pl-8"
+                  className="w-40 pl-8 sm:w-56"
                   placeholder="Nom, téléphone, e-mail…"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}

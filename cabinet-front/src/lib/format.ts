@@ -8,7 +8,12 @@ import type {
 
 export function formatAriary(montant: number | null | undefined): string {
   if (montant == null) return '—'
-  return `${new Intl.NumberFormat('fr-FR').format(montant)} Ar`
+  // Espaces normaux (et non insécables) : les montants peuvent se couper
+  // proprement sur les petits écrans au lieu de déborder des cartes.
+  const montantFormate = new Intl.NumberFormat('fr-FR')
+    .format(montant)
+    .replace(/[\u00a0\u202f]/g, ' ')
+  return `${montantFormate} Ar`
 }
 
 export function formatDate(date: string | null | undefined): string {

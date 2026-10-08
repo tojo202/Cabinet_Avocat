@@ -15,6 +15,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   rapports: 'Rapports',
   parametres: 'Paramètres',
   administration: 'Administration',
+  profil: 'Mon profil',
 }
 
 interface FilAriane {

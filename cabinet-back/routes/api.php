@@ -21,6 +21,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('/auth/me', [AuthController::class, 'me'])->name('auth.me');
+        Route::put('/auth/me', [AuthController::class, 'updateProfile'])->name('auth.updateProfile');
+        Route::put('/auth/password', [AuthController::class, 'updatePassword'])->name('auth.updatePassword');
 
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
         Route::get('/dashboard/activite', [DashboardController::class, 'activite']);

@@ -13,6 +13,7 @@ import { CalendrierPage } from './features/calendrier/CalendrierPage'
 import { AvocatsPage } from './features/avocats/AvocatsPage'
 import { AdministrationPage } from './features/administration/AdministrationPage'
 import { ParametresPage } from './features/parametres/ParametresPage'
+import { ProfilPage } from './features/profil/ProfilPage'
 import { RapportsPage } from './features/rapports/RapportsPage'
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/profil" element={<ProfilPage />} />
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/dossiers" element={<DossiersPage />} />
             <Route path="/facturation" element={<FacturationPage />} />

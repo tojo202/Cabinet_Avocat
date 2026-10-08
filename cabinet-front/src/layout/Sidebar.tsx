@@ -5,6 +5,9 @@ import {
   FileText,
   FolderOpen,
   Gavel,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   PieChart,
   Scale,
   Settings,
@@ -15,7 +18,10 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from 'cn'
+import { useLogout } from '@/hooks/use-logout'
 import { useAuth } from '@/store/auth'
+import { useUi } from '@/store/ui'
+import { Button } from '@/components/ui/button'
 
 interface NavItem {
   label: string
@@ -39,7 +45,12 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Administration', to: '/administration', icon: Settings, adminOnly: true },
 ]
 
-export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+interface NavLinksProps {
+  onNavigate?: () => void
+  collapsed?: boolean
+}
+
+export function NavLinks({ onNavigate, collapsed = false }: NavLinksProps) {
   const can = useAuth((s) => s.can)
   const hasRole = useAuth((s) => s.hasRole)
 
@@ -59,9 +70,11 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
               to={item.to}
               end={item.to === '/administration'}
               onClick={onNavigate}
+              title={collapsed ? item.label : undefined}
               className={({ isActive }) =>
                 cn(
                   'flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
+                  collapsed && 'justify-center px-0',
                   isActive
                     ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
                     : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
@@ -69,7 +82,9 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
               }
             >
               <Icon className="size-4 shrink-0" />
-              <span className="flex-1">{item.label}</span>
+              <span className={cn('flex-1 truncate', collapsed && 'sr-only')}>
+                {item.label}
+              </span>
             </NavLink>
           </li>
         )
@@ -79,24 +94,71 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function Sidebar() {
+  const collapsed = useUi((s) => s.sidebarCollapsed)
+  const toggleSidebar = useUi((s) => s.toggleSidebar)
+  const handleLogout = useLogout()
+
   return (
-    <aside className="fixed inset-y-0 start-0 z-30 hidden w-60 flex-col border-e border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex">
-      <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-          <Scale className="size-4" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold">CabinetPro</span>
-          <span className="text-xs text-sidebar-foreground/60">Gestion juridique</span>
-        </div>
+    <aside
+      className={cn(
+        'fixed inset-y-0 start-0 z-30 hidden flex-col border-e border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex',
+        collapsed ? 'w-16' : 'w-60',
+      )}
+    >
+      <div
+        className={cn(
+          'flex h-14 items-center gap-2 border-b border-sidebar-border px-4',
+          collapsed && 'justify-center px-0',
+        )}
+      >
+        {!collapsed && (
+          <>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <Scale className="size-4" />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="text-sm font-semibold">CabinetPro</span>
+              <span className="text-xs text-sidebar-foreground/60">Gestion juridique</span>
+            </div>
+          </>
+        )}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={toggleSidebar}
+          aria-label={collapsed ? 'Déplier le menu' : 'Replier le menu'}
+          title={collapsed ? 'Déplier le menu' : 'Replier le menu'}
+          className="shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        >
+          {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+        </Button>
       </div>
 
       <nav className="flex-1 overflow-y-auto">
-        <NavLinks />
+        <NavLinks collapsed={collapsed} />
       </nav>
 
-      <div className="border-t border-sidebar-border p-4 text-xs text-sidebar-foreground/60">
-        CabinetPro © {new Date().getFullYear()}
+      <div
+        className={cn(
+          'border-t border-sidebar-border p-4',
+          collapsed && 'px-2 py-3',
+        )}
+      >
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          aria-label="Se déconnecter"
+          title="Se déconnecter"
+          className={cn(
+            'w-full justify-start gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-destructive',
+            collapsed && 'justify-center px-0',
+          )}
+        >
+          <LogOut className="size-4 shrink-0" />
+          {!collapsed && 'Se déconnecter'}
+        </Button>
       </div>
     </aside>
   )

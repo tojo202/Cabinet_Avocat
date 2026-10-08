@@ -299,7 +299,7 @@ export function AvocatsPage() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -314,7 +314,7 @@ export function AvocatsPage() {
               <Skeleton className="h-8 w-16" />
             ) : (
               <div>
-                <div className="text-2xl font-bold">{meta?.total ?? avocats.length}</div>
+                <div className="text-xl font-bold break-words sm:text-2xl">{meta?.total ?? avocats.length}</div>
                 <p className="mt-1 text-xs text-muted-foreground">Avocats & collaborateurs</p>
               </div>
             )}
@@ -335,7 +335,7 @@ export function AvocatsPage() {
               <Skeleton className="h-8 w-16" />
             ) : (
               <div>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold break-words sm:text-2xl">
                   {avocats.filter((avocat) => avocat.actif).length}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">Sur la liste affichée</p>
@@ -358,7 +358,7 @@ export function AvocatsPage() {
               <Skeleton className="h-8 w-16" />
             ) : (
               <div>
-                <div className="text-2xl font-bold">{totalDossiers}</div>
+                <div className="text-xl font-bold break-words sm:text-2xl">{totalDossiers}</div>
                 <p className="mt-1 text-xs text-muted-foreground">Cumul des affaires traitées</p>
               </div>
             )}
@@ -379,7 +379,7 @@ export function AvocatsPage() {
               <Skeleton className="h-8 w-16" />
             ) : (
               <div>
-                <div className="text-2xl font-bold">{specialites}</div>
+                <div className="text-xl font-bold break-words sm:text-2xl">{specialites}</div>
                 <p className="mt-1 text-xs text-muted-foreground">Domaines distincts</p>
               </div>
             )}
@@ -398,7 +398,7 @@ export function AvocatsPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  className="w-56 pl-8"
+                  className="w-40 pl-8 sm:w-56"
                   placeholder="Nom, prénom, spécialité…"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}

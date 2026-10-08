@@ -198,7 +198,7 @@ export function DocumentsPage() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -213,7 +213,7 @@ export function DocumentsPage() {
               <Skeleton className="h-8 w-16" />
             ) : (
               <div>
-                <div className="text-2xl font-bold">{stats?.total_documents ?? 0}</div>
+                <div className="text-xl font-bold break-words sm:text-2xl">{stats?.total_documents ?? 0}</div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {stats?.dossiers_lies ?? 0} dossier(s) rattaché(s)
                 </p>
@@ -222,7 +222,7 @@ export function DocumentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="sm:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Espace de stockage
@@ -236,8 +236,8 @@ export function DocumentsPage() {
               <Skeleton className="h-8 w-full" />
             ) : (
               <div>
-                <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-bold">{formatTaille(stats?.espace_utilise)}</span>
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+                  <span className="text-xl font-bold break-words sm:text-2xl">{formatTaille(stats?.espace_utilise)}</span>
                   <span className="text-xs text-muted-foreground">
                     sur {formatTaille(stats?.quota)}
                   </span>
@@ -418,7 +418,7 @@ export function DocumentsPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  className="w-56 pl-8"
+                  className="w-40 pl-8 sm:w-56"
                   placeholder="Nom du fichier…"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}

@@ -241,7 +241,7 @@ export function RapportsPage() {
       </Card>
 
       {syntheseQuery.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {Array.from({ length: 6 }).map((_, index) => (
             <Skeleton key={index} className="h-24 w-full" />
           ))}
@@ -257,7 +257,7 @@ export function RapportsPage() {
           </Button>
         </div>
       ) : synthese ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <KpiCard
             label="Nouveaux clients"
             value={String(synthese.nouveaux_clients)}
@@ -534,7 +534,7 @@ function KpiCard({
           <div className={`flex size-9 items-center justify-center rounded-lg ${tone}`}>{icon}</div>
           <div className="min-w-0">
             <p className="truncate text-xs text-muted-foreground">{label}</p>
-            <p className="truncate text-lg font-bold">{value}</p>
+            <p className="break-words text-base font-bold tabular-nums sm:text-lg">{value}</p>
             {secondary && <p className="truncate text-xs text-muted-foreground">{secondary}</p>}
           </div>
         </div>

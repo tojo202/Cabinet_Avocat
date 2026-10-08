@@ -365,7 +365,7 @@ export function FacturationPage() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (
           <Card key={card.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -381,7 +381,7 @@ export function FacturationPage() {
                 <Skeleton className="h-8 w-24" />
               ) : (
                 <div>
-                  <div className="text-2xl font-bold">{card.value}</div>
+                  <div className="text-xl font-bold break-words sm:text-2xl">{card.value}</div>
                   <p className="mt-1 text-xs text-muted-foreground">{card.hint}</p>
                 </div>
               )}
@@ -401,7 +401,7 @@ export function FacturationPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  className="w-48 pl-8"
+                  className="w-40 pl-8 sm:w-48"
                   placeholder="N° de facture…"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}

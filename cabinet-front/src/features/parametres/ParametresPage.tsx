@@ -671,7 +671,7 @@ export function ParametresPage() {
                     <div className="relative">
                       <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        className="w-56 pl-8"
+                        className="w-40 pl-8 sm:w-56"
                         placeholder="Nom ou e-mail…"
                         value={searchInput}
                         onChange={(event) => setSearchInput(event.target.value)}

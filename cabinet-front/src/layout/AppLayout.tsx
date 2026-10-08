@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { X } from 'lucide-react'
+import { useRegisterSW } from 'virtual:pwa-register/react'
+import { cn } from 'cn'
 import { Sidebar, NavLinks } from './Sidebar'
 import { Topbar } from './Topbar'
 import { Button } from '@/components/ui/button'
@@ -11,15 +13,46 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { InstallBanner, UpdatePrompt } from '@/components/pwa'
+import { useUi } from '@/store/ui'
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const sidebarCollapsed = useUi((s) => s.sidebarCollapsed)
+
+  // Gestion de la mise à jour du Service Worker
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegistered(r?: ServiceWorkerRegistration) {
+      console.log('[PWA] Service Worker enregistré :', r)
+    },
+    onRegisterError(error: unknown) {
+      console.warn('[PWA] Erreur d\'enregistrement SW :', error)
+    },
+  })
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Bannière d'installation PWA (mobile) */}
+      <InstallBanner />
+
+      {/* Dialog de mise à jour SW */}
+      <UpdatePrompt
+        open={needRefresh}
+        onUpdate={() => updateServiceWorker(true)}
+        onDismiss={() => setNeedRefresh(false)}
+      />
+
       <Sidebar />
 
-      <div className="lg:ps-60">
+      <div
+        className={cn(
+          'transition-[padding] duration-200 ease-out',
+          sidebarCollapsed ? 'lg:ps-16' : 'lg:ps-60',
+        )}
+      >
         <Topbar onToggleMobileMenu={() => setMobileOpen(true)} />
 
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
