@@ -14,6 +14,7 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
+        // Réinitialiser le cache des permissions Spatie
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
@@ -29,8 +30,10 @@ class RolePermissionSeeder extends Seeder
             'rapports.view',
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::findOrCreate($permission);
+        $createdPermissions = [];
+        foreach ($permissions as $permissionName) {
+            $createdPermissions[$permissionName] = Permission::findOrCreate($permissionName, 'web');
+            Permission::findOrCreate($permissionName, 'sanctum');
         }
 
         $roles = [
@@ -66,8 +69,14 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($roles as $roleName => $rolePermissions) {
-            $role = Role::findOrCreate($roleName);
-            $role->syncPermissions($rolePermissions);
+            $roleWeb = Role::findOrCreate($roleName, 'web');
+            $rolePermissionsWeb = array_map(fn($p) => $createdPermissions[$p], $rolePermissions);
+            $roleWeb->syncPermissions($rolePermissionsWeb);
+
+            $roleSanctum = Role::findOrCreate($roleName, 'sanctum');
+            $roleSanctum->syncPermissions($rolePermissions);
         }
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }
