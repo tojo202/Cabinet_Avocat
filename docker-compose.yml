@@ -1,0 +1,61 @@
+name: cabinet-pro
+
+services:
+  postgres:
+    image: postgres:alpine
+    container_name: cabinet-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cabinet_db
+      POSTGRES_USER: cabinet_user
+      POSTGRES_PASSWORD: cabinet_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cabinet_user -d cabinet_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./cabinet-back
+      dockerfile: Dockerfile
+    container_name: cabinet-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: base64:Yv1g/H6T5T6YJ3bL1vX8Z+N7q7M3Q4K5P6L7N8O9P0Q=
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: cabinet_db
+      DB_USERNAME: cabinet_user
+      DB_PASSWORD: cabinet_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./cabinet-back:/var/www/html
+
+  frontend:
+    build:
+      context: ./cabinet-front
+      dockerfile: Dockerfile
+    container_name: cabinet-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./cabinet-front:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
