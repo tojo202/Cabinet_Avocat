@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # Installer les dépendances système et les extensions PHP pour PostgreSQL
 RUN apk add --no-cache \
@@ -9,7 +9,7 @@ RUN apk add --no-cache \
     unzip \
     git \
     curl \
-    && docker-php-ext-install pdo pdo_pgsql bcmath gd zip
+    && docker-php-ext-install pdo pdo_pgsql bcmath gd zip exif
 
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
