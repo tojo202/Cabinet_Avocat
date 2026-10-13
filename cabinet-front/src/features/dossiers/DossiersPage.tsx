@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import {
   CircleAlert,
   FolderOpen,
@@ -11,19 +10,16 @@ import {
   Users,
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Controller, useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
-import { z } from 'zod'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAvocats } from '@/hooks/use-avocats'
 import {
   useChangerStatutDossier,
-  useCreateDossier,
   useDeleteDossier,
   useDossierStats,
   useDossiers,
   useSynchroniserAvocats,
-  useUpdateDossier,
 } from '@/hooks/use-dossiers'
+import { PRIORITES, STATUTS } from './dossier-form'
 import { PRIORITE_LABELS, STATUT_DOSSIER_LABELS, formatDate } from '@/lib/format'
 import { useAuth } from '@/store/auth'
 import type { Dossier, PrioriteDossier, StatutDossier } from '@/types'
@@ -46,9 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FieldError } from '@/components/FieldError'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { ListPagination } from '@/components/ListPagination'
 import { Progress } from '@/components/ui/progress'
 import {
@@ -67,90 +61,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Textarea } from '@/components/ui/textarea'
-import { ClientPicker } from '@/components/ClientPicker'
-
-const STATUTS: StatutDossier[] = ['en_cours', 'en_revision', 'en_attente', 'cloture']
-const PRIORITES: PrioriteDossier[] = ['normale', 'haute', 'urgente']
-
-const TYPE_DROIT_SUGGESTIONS = [
-  'Droit du travail',
-  'Droit des affaires',
-  'Droit pénal',
-  'Droit de la famille',
-  'Droit immobilier',
-  'Droit fiscal',
-  'Droit des contrats',
-  'Droit administratif',
-]
-
-const dossierSchema = z
-  .object({
-    client_id: z.number().min(1, 'Sélectionnez un client.'),
-    titre: z.string().min(1, 'Le titre est requis.').max(255),
-    description: z.string(),
-    type_droit: z.string().min(1, 'Le type de droit est requis.').max(100),
-    statut: z.enum(['en_cours', 'en_revision', 'en_attente', 'cloture']),
-    priorite: z.enum(['normale', 'haute', 'urgente']),
-    avancement: z.number().min(0).max(100, 'Entre 0 et 100.'),
-    montant: z.number().min(0).nullable(),
-    date_ouverture: z
-      .string()
-      .min(1, 'La date d’ouverture est requise.')
-      .refine((value) => value <= new Date().toISOString().slice(0, 10), {
-        message: 'La date ne peut pas être postérieure à aujourd’hui.',
-      }),
-    date_cloture: z.string(),
-    avocat_ids: z.array(z.number()),
-  })
-  .superRefine((values, ctx) => {
-    if (values.date_cloture && values.date_cloture < values.date_ouverture) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['date_cloture'],
-        message: 'La date de clôture doit suivre la date d’ouverture.',
-      })
-    }
-  })
-
-type DossierFormValues = z.infer<typeof dossierSchema>
-
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function emptyValues(): DossierFormValues {
-  return {
-    client_id: 0,
-    titre: '',
-    description: '',
-    type_droit: '',
-    statut: 'en_cours',
-    priorite: 'normale',
-    avancement: 0,
-    montant: null,
-    date_ouverture: todayISO(),
-    date_cloture: '',
-    avocat_ids: [],
-  }
-}
-
-function toValues(dossier: Dossier | null): DossierFormValues {
-  if (!dossier) return emptyValues()
-  return {
-    client_id: dossier.client_id,
-    titre: dossier.titre,
-    description: dossier.description ?? '',
-    type_droit: dossier.type_droit,
-    statut: dossier.statut,
-    priorite: dossier.priorite,
-    avancement: dossier.avancement,
-    montant: dossier.montant,
-    date_ouverture: dossier.date_ouverture,
-    date_cloture: dossier.date_cloture ?? '',
-    avocat_ids: dossier.avocats?.map((avocat) => avocat.id) ?? [],
-  }
-}
 
 const STATUT_TONES: Record<StatutDossier, string> = {
   en_cours: 'bg-brown/10 text-brown border-brown/20',
@@ -167,6 +77,7 @@ const SEARCH_OPTIONS = [
 ]
 
 export function DossiersPage() {
+  const navigate = useNavigate()
   const can = useAuth((s) => s.can)
   const canManage = can('dossiers.manage')
 
@@ -178,8 +89,6 @@ export function DossiersPage() {
   const [page, setPage] = useState(1)
   const [view, setView] = useState<'liste' | 'kanban'>('liste')
 
-  const [formOpen, setFormOpen] = useState(false)
-  const [editing, setEditing] = useState<Dossier | null>(null)
   const [deleting, setDeleting] = useState<Dossier | null>(null)
   const [assigning, setAssigning] = useState<Dossier | null>(null)
   const [avocatIds, setAvocatIds] = useState<number[]>([])
@@ -197,31 +106,14 @@ export function DossiersPage() {
   const statsQuery = useDossierStats()
   const avocatsQuery = useAvocats({ per_page: 100 })
 
-  const createMutation = useCreateDossier()
-  const updateMutation = useUpdateDossier()
   const deleteMutation = useDeleteDossier()
   const statutMutation = useChangerStatutDossier()
   const syncMutation = useSynchroniserAvocats()
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { errors },
-  } = useForm<DossierFormValues>({
-    resolver: zodResolver(dossierSchema),
-    defaultValues: emptyValues(),
-  })
-
-  const watchedAvocats = watch('avocat_ids')
   const dossiers = listQuery.data?.data ?? []
   const meta = listQuery.data?.meta
   const stats = statsQuery.data
   const avocats = avocatsQuery.data?.data ?? []
-
-  const saving = createMutation.isPending || updateMutation.isPending
 
   function handleSearch(event: FormEvent) {
     event.preventDefault()
@@ -229,16 +121,12 @@ export function DossiersPage() {
     setPage(1)
   }
 
-  function openCreate() {
-    setEditing(null)
-    reset(emptyValues())
-    setFormOpen(true)
+  function goToCreate() {
+    navigate('/dossiers/nouveau')
   }
 
-  function openEdit(dossier: Dossier) {
-    setEditing(dossier)
-    reset(toValues(dossier))
-    setFormOpen(true)
+  function goToEdit(dossier: Dossier) {
+    navigate(`/dossiers/${dossier.id}/modifier`)
   }
 
   function openAssign(dossier: Dossier) {
@@ -252,31 +140,6 @@ export function DossiersPage() {
     )
   }
 
-  function onSubmit(values: DossierFormValues) {
-    const payload = {
-      client_id: values.client_id,
-      titre: values.titre.trim(),
-      description: values.description.trim() || null,
-      type_droit: values.type_droit.trim(),
-      statut: values.statut,
-      priorite: values.priorite,
-      avancement: values.avancement,
-      montant: values.montant,
-      date_ouverture: values.date_ouverture,
-      date_cloture: values.date_cloture || null,
-      avocat_ids: values.avocat_ids,
-    }
-
-    if (editing) {
-      updateMutation.mutate(
-        { id: editing.id, data: payload },
-        { onSuccess: () => setFormOpen(false) },
-      )
-    } else {
-      createMutation.mutate(payload, { onSuccess: () => setFormOpen(false) })
-    }
-  }
-
   const statCards = [
     { label: 'Total dossiers', value: stats?.total, tone: 'bg-primary/10 text-primary' },
     { label: 'En cours', value: stats?.en_cours, tone: 'bg-brown/10 text-brown' },
@@ -286,7 +149,7 @@ export function DossiersPage() {
 
   function renderAvancement(dossier: Dossier) {
     return (
-      <div className="flex w-28 items-center gap-2">
+      <div className="flex w-full max-w-28 items-center gap-2">
         <Progress value={dossier.avancement} className="h-2 flex-1" />
         <span className="text-xs text-muted-foreground">{dossier.avancement}%</span>
       </div>
@@ -312,7 +175,7 @@ export function DossiersPage() {
   function renderActions(dossier: Dossier) {
     if (!canManage) return null
     return (
-      <div className="flex items-center justify-end gap-1">
+      <div className="flex flex-wrap items-center justify-end gap-1">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -321,7 +184,7 @@ export function DossiersPage() {
         >
           <Users />
         </Button>
-        <Button variant="ghost" size="icon-sm" title="Modifier" onClick={() => openEdit(dossier)}>
+        <Button variant="ghost" size="icon-sm" title="Modifier" onClick={() => goToEdit(dossier)}>
           <Pencil />
         </Button>
         <Button
@@ -353,7 +216,7 @@ export function DossiersPage() {
           </p>
         </div>
         {canManage && (
-          <Button size="sm" onClick={openCreate}>
+          <Button size="sm" onClick={goToCreate}>
             <Plus className="size-4 mr-1.5" />
             Nouveau dossier
           </Button>
@@ -529,7 +392,7 @@ export function DossiersPage() {
                   : 'Ouvrez votre première affaire pour commencer le suivi.'}
               </p>
               {canManage && !search && !priorite && !statut && (
-                <Button size="sm" onClick={openCreate}>
+                <Button size="sm" onClick={goToCreate}>
                   <Plus className="size-4 mr-1.5" />
                   Nouveau dossier
                 </Button>
@@ -609,49 +472,47 @@ export function DossiersPage() {
               })}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Dossier</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Priorité</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Avancement</TableHead>
-                    <TableHead>Ouverture</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+            <Table className="table-fixed [&_td]:whitespace-normal [&_th]:whitespace-normal">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[26%]">Dossier</TableHead>
+                  <TableHead className="w-[15%]">Client</TableHead>
+                  <TableHead className="w-[11%]">Priorité</TableHead>
+                  <TableHead className="w-[12%]">Statut</TableHead>
+                  <TableHead className="w-[15%]">Avancement</TableHead>
+                  <TableHead className="w-[11%]">Ouverture</TableHead>
+                  <TableHead className="w-[10%] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dossiers.map((dossier) => (
+                  <TableRow key={dossier.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-foreground">{dossier.titre}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {dossier.reference} • {dossier.type_droit}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {dossier.client?.nom_complet ?? '—'}
+                    </TableCell>
+                    <TableCell>{renderPrioriteBadge(dossier)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {STATUT_DOSSIER_LABELS[dossier.statut]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{renderAvancement(dossier)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {formatDate(dossier.date_ouverture)}
+                    </TableCell>
+                    <TableCell>{renderActions(dossier)}</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dossiers.map((dossier) => (
-                    <TableRow key={dossier.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-foreground">{dossier.titre}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {dossier.reference} • {dossier.type_droit}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {dossier.client?.nom_complet ?? '—'}
-                      </TableCell>
-                      <TableCell>{renderPrioriteBadge(dossier)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {STATUT_DOSSIER_LABELS[dossier.statut]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{renderAvancement(dossier)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {formatDate(dossier.date_ouverture)}
-                      </TableCell>
-                      <TableCell>{renderActions(dossier)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           )}
 
           {!isKanban && (
@@ -659,231 +520,6 @@ export function DossiersPage() {
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Modifier le dossier' : 'Nouveau dossier'}</DialogTitle>
-            <DialogDescription>
-              {editing
-                ? 'Mettez à jour l’état de l’affaire, son avancement et son équipe.'
-                : 'Ouvrez une affaire, rattachez-la à un client et affectez les avocats.'}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Client</Label>
-                <Controller
-                  control={control}
-                  name="client_id"
-                  render={({ field }) => (
-                    <ClientPicker
-                      value={field.value > 0 ? field.value : null}
-                      invalid={Boolean(errors.client_id)}
-                      onChange={(client) => field.onChange(client?.id ?? 0)}
-                    />
-                  )}
-                />
-                <FieldError message={errors.client_id?.message} />
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="dossier-titre">Titre de l’affaire</Label>
-                <Input
-                  id="dossier-titre"
-                  placeholder="Licence commerciale — litige"
-                  {...register('titre')}
-                />
-                <FieldError message={errors.titre?.message} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="dossier-type">Type de droit</Label>
-                <Input
-                  id="dossier-type"
-                  list="type-droit-options"
-                  {...register('type_droit')}
-                />
-                <datalist id="type-droit-options">
-                  {TYPE_DROIT_SUGGESTIONS.map((option) => (
-                    <option key={option} value={option} />
-                  ))}
-                </datalist>
-                <FieldError message={errors.type_droit?.message} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="dossier-montant">Montant en jeu (Ar)</Label>
-                <Input
-                  id="dossier-montant"
-                  type="number"
-                  min={0}
-                  placeholder="0"
-                  {...register('montant', {
-                    setValueAs: (value) =>
-                      value === '' || value === null || value === undefined
-                        ? null
-                        : Number(value),
-                  })}
-                />
-                <FieldError message={errors.montant?.message} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Priorité</Label>
-                <Controller
-                  control={control}
-                  name="priorite"
-                  render={({ field }) => (
-                    <Select
-                      items={PRIORITES.map((item) => ({
-                        value: item,
-                        label: PRIORITE_LABELS[item],
-                      }))}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PRIORITES.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {PRIORITE_LABELS[item]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError message={errors.priorite?.message} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Statut</Label>
-                <Controller
-                  control={control}
-                  name="statut"
-                  render={({ field }) => (
-                    <Select
-                      items={STATUTS.map((item) => ({
-                        value: item,
-                        label: STATUT_DOSSIER_LABELS[item],
-                      }))}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STATUTS.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {STATUT_DOSSIER_LABELS[item]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError message={errors.statut?.message} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="dossier-ouverture">Date d’ouverture</Label>
-                <Input
-                  id="dossier-ouverture"
-                  type="date"
-                  max={todayISO()}
-                  {...register('date_ouverture')}
-                />
-                <FieldError message={errors.date_ouverture?.message} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="dossier-cloture">Date de clôture</Label>
-                <Input id="dossier-cloture" type="date" {...register('date_cloture')} />
-                <FieldError message={errors.date_cloture?.message} />
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="dossier-avancement">Avancement</Label>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {watch('avancement') ?? 0}%
-                  </span>
-                </div>
-                <Input
-                  id="dossier-avancement"
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={5}
-                  {...register('avancement', { valueAsNumber: true })}
-                />
-                <FieldError message={errors.avancement?.message} />
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="dossier-description">Description</Label>
-                <Textarea
-                  id="dossier-description"
-                  rows={3}
-                  placeholder="Contexte, pièces reçues, prochaines étapes…"
-                  {...register('description')}
-                />
-              </div>
-
-              <div className="space-y-2 sm:col-span-2">
-                <Label>Avocats affectés</Label>
-                {avocatsQuery.isLoading ? (
-                  <Skeleton className="h-20 w-full" />
-                ) : avocats.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    Aucun avocat disponible dans le cabinet.
-                  </p>
-                ) : (
-                  <div className="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-2">
-                    {avocats.map((avocat) => (
-                      <label
-                        key={avocat.id}
-                        className="flex cursor-pointer items-center gap-2 text-sm"
-                      >
-                        <Checkbox
-                          checked={(watchedAvocats ?? []).includes(avocat.id)}
-                          onChange={() => toggleAvocat(avocat.id)}
-                        />
-                        <span>{avocat.nom_complet}</span>
-                        {avocat.specialite && (
-                          <span className="text-xs text-muted-foreground">
-                            • {avocat.specialite}
-                          </span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                )}
-                {errors.avocat_ids?.message && <FieldError message={errors.avocat_ids.message} />}
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setFormOpen(false)}
-              >
-                Annuler
-              </Button>
-              <Button type="submit" size="sm" disabled={saving}>
-                {saving ? 'Enregistrement…' : editing ? 'Enregistrer' : 'Créer le dossier'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       <Dialog
         open={assigning !== null}

@@ -11,11 +11,10 @@ import {
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { useDossiers } from '@/hooks/use-dossiers'
 import {
-  useAjouterPaiement,
   useCreateFacture,
   useDeleteFacture,
   useFactureStats,
@@ -23,14 +22,9 @@ import {
   useTelechargerFacturePdf,
   useUpdateFacture,
 } from '@/hooks/use-factures'
-import {
-  formatAriary,
-  formatDate,
-  MODE_PAIEMENT_LABELS,
-  STATUT_FACTURE_LABELS,
-} from '@/lib/format'
+import { formatAriary, formatDate, STATUT_FACTURE_LABELS } from '@/lib/format'
 import { useAuth } from '@/store/auth'
-import type { Facture, ModePaiement, StatutFacture } from '@/types'
+import type { Facture, StatutFacture } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -73,7 +67,6 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 
 const STATUTS: StatutFacture[] = ['brouillon', 'en_attente', 'payee', 'annulee']
-const MODES: ModePaiement[] = ['especes', 'virement', 'mobile_money', 'cheque']
 
 const factureSchema = z
   .object({
@@ -104,16 +97,6 @@ const factureSchema = z
   })
 
 type FactureFormValues = z.infer<typeof factureSchema>
-
-const paiementSchema = z.object({
-  montant: z.number().int('Montant entier requis.').min(1, 'Le montant est requis.'),
-  mode: z.enum(['especes', 'virement', 'mobile_money', 'cheque']),
-  date_paiement: z.string().min(1, 'La date est requise.'),
-  reference: z.string().max(100, '100 caractères maximum.'),
-  notes: z.string(),
-})
-
-type PaiementFormValues = z.infer<typeof paiementSchema>
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
@@ -156,16 +139,6 @@ function toFactureValues(facture: Facture): FactureFormValues {
   }
 }
 
-function emptyPaiementValues(): PaiementFormValues {
-  return {
-    montant: 0,
-    mode: 'especes',
-    date_paiement: todayISO(),
-    reference: '',
-    notes: '',
-  }
-}
-
 function statutBadge(statut: StatutFacture) {
   const variant =
     statut === 'payee'
@@ -185,8 +158,10 @@ const SORT_OPTIONS = [
 ]
 
 export function FacturationPage() {
+  const navigate = useNavigate()
   const can = useAuth((s) => s.can)
   const canManage = can('factures.manage')
+  const canEncaisser = can('paiements.manage')
 
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -197,7 +172,6 @@ export function FacturationPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Facture | null>(null)
   const [deleting, setDeleting] = useState<Facture | null>(null)
-  const [paiementFor, setPaiementFor] = useState<Facture | null>(null)
 
   const listQuery = useFactures({ search, statut, sort, page })
   const statsQuery = useFactureStats()
@@ -207,7 +181,6 @@ export function FacturationPage() {
   const updateMutation = useUpdateFacture()
   const deleteMutation = useDeleteFacture()
   const pdfMutation = useTelechargerFacturePdf()
-  const paiementMutation = useAjouterPaiement()
 
   const {
     control,
@@ -222,17 +195,6 @@ export function FacturationPage() {
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'lignes' })
-
-  const {
-    control: paiementControl,
-    register: paiementRegister,
-    handleSubmit: handlePaiementSubmit,
-    reset: resetPaiement,
-    formState: { errors: paiementErrors },
-  } = useForm<PaiementFormValues>({
-    resolver: zodResolver(paiementSchema),
-    defaultValues: emptyPaiementValues(),
-  })
 
   const factures = listQuery.data?.data ?? []
   const meta = listQuery.data?.meta
@@ -268,11 +230,7 @@ export function FacturationPage() {
   }
 
   function openPaiement(facture: Facture) {
-    setPaiementFor(facture)
-    resetPaiement({
-      ...emptyPaiementValues(),
-      montant: facture.solde > 0 ? facture.solde : facture.montant_total,
-    })
+    navigate(`/paiements/nouveau?facture=${facture.id}`)
   }
 
   function onSubmit(values: FactureFormValues) {
@@ -295,23 +253,6 @@ export function FacturationPage() {
     } else {
       createMutation.mutate(payload, { onSuccess: () => setFormOpen(false) })
     }
-  }
-
-  function onPaiementSubmit(values: PaiementFormValues) {
-    if (!paiementFor) return
-    paiementMutation.mutate(
-      {
-        id: paiementFor.id,
-        data: {
-          montant: values.montant,
-          mode: values.mode,
-          date_paiement: values.date_paiement,
-          reference: values.reference.trim() || null,
-          notes: values.notes.trim() || null,
-        },
-      },
-      { onSuccess: () => setPaiementFor(null) },
-    )
   }
 
   const statCards = [
@@ -544,7 +485,7 @@ export function FacturationPage() {
                           >
                             <Download />
                           </Button>
-                          {canManage && facture.solde > 0 && facture.statut !== 'annulee' && (
+                          {canEncaisser && facture.solde > 0 && facture.statut !== 'annulee' && (
                             <Button
                               variant="ghost"
                               size="icon-sm"
@@ -767,108 +708,6 @@ export function FacturationPage() {
               </Button>
               <Button type="submit" size="sm" disabled={saving}>
                 {saving ? 'Enregistrement…' : editing ? 'Enregistrer' : 'Créer la facture'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={paiementFor !== null}
-        onOpenChange={(open) => !open && setPaiementFor(null)}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Enregistrer un paiement</DialogTitle>
-            <DialogDescription>
-              {paiementFor
-                ? `${paiementFor.numero} — solde restant ${formatAriary(paiementFor.solde)}`
-                : ''}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handlePaiementSubmit(onPaiementSubmit)} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="paiement-montant">Montant (Ar)</Label>
-                <Input
-                  id="paiement-montant"
-                  type="number"
-                  min={1}
-                  {...paiementRegister('montant', { valueAsNumber: true })}
-                />
-                <FieldError message={paiementErrors.montant?.message} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Mode de paiement</Label>
-                <Controller
-                  control={paiementControl}
-                  name="mode"
-                  render={({ field }) => (
-                    <Select
-                      items={MODES.map((item) => ({
-                        value: item,
-                        label: MODE_PAIEMENT_LABELS[item],
-                      }))}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MODES.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {MODE_PAIEMENT_LABELS[item]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="paiement-date">Date</Label>
-                <Input
-                  id="paiement-date"
-                  type="date"
-                  {...paiementRegister('date_paiement')}
-                />
-                <FieldError message={paiementErrors.date_paiement?.message} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="paiement-reference">Référence</Label>
-                <Input
-                  id="paiement-reference"
-                  placeholder="Virement, chèque…"
-                  {...paiementRegister('reference')}
-                />
-                <FieldError message={paiementErrors.reference?.message} />
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="paiement-notes">Notes</Label>
-                <Textarea
-                  id="paiement-notes"
-                  rows={2}
-                  {...paiementRegister('notes')}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setPaiementFor(null)}
-              >
-                Annuler
-              </Button>
-              <Button type="submit" size="sm" disabled={paiementMutation.isPending}>
-                {paiementMutation.isPending ? 'Enregistrement…' : 'Encaisser'}
               </Button>
             </DialogFooter>
           </form>

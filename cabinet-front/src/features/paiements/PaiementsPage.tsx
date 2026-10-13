@@ -3,13 +3,15 @@ import {
   CircleAlert,
   Coins,
   Landmark,
+  Plus,
   Receipt,
   Search,
   Smartphone,
   Wallet,
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/store/auth'
 import { usePaiements, usePaiementsStats } from '@/hooks/use-paiements'
 import { formatAriary, formatDate, MODE_PAIEMENT_LABELS } from '@/lib/format'
 import type { ModePaiement } from '@/types'
@@ -58,6 +60,10 @@ const MODE_TONES: Record<ModePaiement, string> = {
 }
 
 export function PaiementsPage() {
+  const navigate = useNavigate()
+  const can = useAuth((s) => s.can)
+  const canManage = can('paiements.manage')
+
   const [searchDossier, setSearchDossier] = useState('')
   const [mode, setMode] = useState<ModePaiement | ''>('')
   const [page, setPage] = useState(1)
@@ -133,6 +139,12 @@ export function PaiementsPage() {
             Historique des encaissements par mode et par facture
           </p>
         </div>
+        {canManage && (
+          <Button size="sm" onClick={() => navigate('/paiements/nouveau')}>
+            <Plus className="size-4 mr-1.5" />
+            Nouveau paiement
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
